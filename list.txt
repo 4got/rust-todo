@@ -1,1 +1,4 @@
-Need to implement struct
+Implement as struct
+Use struct static print method
+Add more functionality: remove, remove all
+Implement file read and write as TodoList struct methods
