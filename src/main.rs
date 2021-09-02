@@ -29,6 +29,10 @@ impl TodoList<Box<String>> {
     }
 
     fn serve(mut file: File) -> std::io::Result<()> {
+        println!("\r\nWhat do you want?");
+
+        //  interface
+
         println!("\r\nWant to add something?");
         let mut todo = String::new();
         io::stdin().read_line(&mut todo)?;
