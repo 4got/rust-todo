@@ -8,38 +8,38 @@ struct TodoList<T> {
     todos: Vec<T>,
 }
 
-impl TodoList<Box<String>> {
-    fn new(file: &File) -> TodoList<Box<String>> {
+impl TodoList<String> {
+    fn new(file: &File) -> TodoList<String> {
         let mut todos = Vec::new();
         let reader = BufReader::new(file);
         for line in reader.lines() {
             let todo = line.unwrap();
             if todo.len() > 0 {
-                todos.push(Box::new(todo));
+                todos.push(todo);
             }
         }
         TodoList { todos }
     }
 
-    fn remove(self, number: u32) -> Self {
+    fn remove(&mut self, number: usize) -> () {
         println!("remove_number = {:?}", number);
-        self
+        self.todos.remove(0);
     }
 
     fn add() -> std::io::Result<()> {
         Ok(())
     }
 
-    fn print(self) -> Self {
+    fn print(&self) -> () {
         for (i, todo) in self.todos.iter().enumerate() {
             println!("{}. {}", i + 1, todo);
         }
-        self
     }
 
     fn serve(mut file: File) -> std::io::Result<()> {
-        let todo_list = TodoList::new(&file);
+        let mut todo_list = TodoList::new(&file);
         todo_list.print();
+        // println!("todo_list.todos.join = {:?}", todo_list.todos.join("\r\n"));
 
         //  interface
         println!("\r\nWhat do you want?\r\n");
@@ -62,11 +62,14 @@ impl TodoList<Box<String>> {
             let mut remove_number_string = String::new();
             io::stdin().read_line(&mut remove_number_string)?;
 
-            let remove_number = remove_number_string.parse::<u32>().unwrap();
+            let remove_number = remove_number_string.trim().parse::<usize>().unwrap();
 
-            if remove_number > 0 {
-                let todo_list = TodoList::new(&file);
+            if (remove_number > 0) & (remove_number < todo_list.todos.len()) {
                 todo_list.remove(remove_number);
+                // file.set_len(0)?;
+                // file.flush()?;
+                file.write(todo_list.todos.join("\r\n").as_bytes())?;
+                println!("todo_list.todos = {:?}", todo_list.todos.join("\r\n"));
             }
         
         // add
@@ -90,7 +93,7 @@ impl TodoList<Box<String>> {
         OpenOptions::new()
             .read(true)
             .write(true)
-            // .append(true)
+            // .append(false)
             .create(true)
             .open(&String::from(TODOLIST_PATH))
             .unwrap()
