@@ -4,14 +4,14 @@ use std::io::{self, prelude::*, BufReader};
 
 const TODOLIST_PATH: &str = "list.txt";
 
-struct TodoList<T> {
-    todos: Vec<T>,
-}
-
 fn get_input() -> std::io::Result<String> {
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;
     Ok(input.trim().to_string())
+}
+
+struct TodoList<T> {
+    todos: Vec<T>,
 }
 
 impl TodoList<String> {
@@ -64,8 +64,9 @@ impl TodoList<String> {
             },
             "remove" => {
                 println!("Press number of todo: ");
-                let remove_number_string: String = get_input()?;
-                let remove_number = remove_number_string.parse::<usize>().unwrap();
+                // let remove_number_string: String = get_input()?;
+                let remove_number = get_input()?
+                    .parse::<usize>().unwrap();
 
                 if (remove_number > 0) & (remove_number < todo_list.todos.len()) {
                     todo_list.remove(remove_number);
