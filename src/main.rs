@@ -36,6 +36,16 @@ impl TodoList<String> {
         Ok(())
     }
 
+    fn save(self) -> std::io::Result<()> {
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .open(&String::from(TODOLIST_PATH))
+            .unwrap();
+        file.write_all(self.todos.join("\r\n").as_bytes())?;
+        Ok(())
+    }
+
     fn print(&self) -> () {
         for (i, todo) in self.todos.iter().enumerate() {
             println!("{}. {}", i + 1, todo);
@@ -64,16 +74,14 @@ impl TodoList<String> {
             },
             "remove" => {
                 println!("Press number of todo: ");
-                // let remove_number_string: String = get_input()?;
                 let remove_number = get_input()?
                     .parse::<usize>().unwrap();
-
-                if (remove_number > 0) & (remove_number < todo_list.todos.len()) {
+                
+                if let Some(_) = todo_list.todos.get(remove_number - 1) {
                     todo_list.remove(remove_number);
-                    // file.set_len(0)?;
-                    // file.flush()?;
-                    file.write(todo_list.todos.join("\r\n").as_bytes())?;
-                    println!("todo_list.todos = {:?}", todo_list.todos.join("\r\n"));
+                    todo_list.save();
+                } else {
+                    println!("Wrong number = {:?}", remove_number);
                 }
             },
             "add" => {
