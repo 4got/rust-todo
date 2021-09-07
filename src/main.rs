@@ -8,6 +8,12 @@ struct TodoList<T> {
     todos: Vec<T>,
 }
 
+fn get_input() -> std::io::Result<String> {
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+    Ok(input.trim().to_string())
+}
+
 impl TodoList<String> {
     fn new(file: &File) -> TodoList<String> {
         let mut todos = Vec::new();
@@ -36,56 +42,53 @@ impl TodoList<String> {
         }
     }
 
-    fn serve(mut file: File) -> std::io::Result<()> {
-        let mut todo_list = TodoList::new(&file);
-        todo_list.print();
-        // println!("todo_list.todos.join = {:?}", todo_list.todos.join("\r\n"));
-
-        //  interface
+    fn draw_interface() {
         println!("\r\nWhat do you want?\r\n");
         println!("clear: remove all todos");
         println!("remove: remove todo");
         println!("add: add todo");
+    }
+    fn serve(mut file: File) -> std::io::Result<()> {
+        let mut todo_list = TodoList::new(&file);
+        todo_list.print();
 
-        let mut command = String::new();
-        io::stdin().read_line(&mut command)?;
-        command = command.trim().to_string();
+        // interface
+        TodoList::draw_interface();
 
-        // clear
-        if command.eq("clear") {
-            file.set_len(0)?;
-            println!("\r\nClear was successfull, closing\r\n");
-            
-        // remove
-        } else if command.eq("remove") {
-            println!("Press number of todo: ");
-            let mut remove_number_string = String::new();
-            io::stdin().read_line(&mut remove_number_string)?;
+        // get command
+        let command: String = get_input()?;
+        match command.as_str() {
+            "clear" => {
+                file.set_len(0)?;
+                println!("\r\nClear was successfull, closing\r\n");
+            },
+            "remove" => {
+                println!("Press number of todo: ");
+                let remove_number_string: String = get_input()?;
+                let remove_number = remove_number_string.parse::<usize>().unwrap();
 
-            let remove_number = remove_number_string.trim().parse::<usize>().unwrap();
+                if (remove_number > 0) & (remove_number < todo_list.todos.len()) {
+                    todo_list.remove(remove_number);
+                    // file.set_len(0)?;
+                    // file.flush()?;
+                    file.write(todo_list.todos.join("\r\n").as_bytes())?;
+                    println!("todo_list.todos = {:?}", todo_list.todos.join("\r\n"));
+                }
+            },
+            "add" => {
+                println!("\r\nWant to add something?");
+                let todo: String = get_input()?;
+                if todo.len() <= 0 {
+                    println!("\r\nNothing to add, closing\r\n");
+                    return Ok(());
+                }
 
-            if (remove_number > 0) & (remove_number < todo_list.todos.len()) {
-                todo_list.remove(remove_number);
-                // file.set_len(0)?;
-                // file.flush()?;
-                file.write(todo_list.todos.join("\r\n").as_bytes())?;
-                println!("todo_list.todos = {:?}", todo_list.todos.join("\r\n"));
+                println!("\r\nAdd '{}' was successfull, closing\r\n", todo.trim());
+                file.write_all(todo.trim().as_bytes())?;
             }
-        
-        // add
-        } else if command.eq("add") {
-            println!("\r\nWant to add something?");
-            let mut todo = String::new();
-            io::stdin().read_line(&mut todo)?;
-            if todo.len() <= 0 {
-                println!("\r\nNothing to add, closing\r\n");
-                return Ok(());
-            }
+            _ => ()
 
-            println!("\r\nAdd '{}' was successfull, closing\r\n", todo.trim());
-            file.write_all(todo.as_bytes())?;
         }
-        
         Ok(())
     }
 
