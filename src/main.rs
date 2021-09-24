@@ -32,7 +32,14 @@ impl TodoList<String> {
         self.todos.remove(0);
     }
 
-    fn add() -> std::io::Result<()> {
+    fn add(&mut self, todo: String) -> std::io::Result<()> {
+        if todo.len() <= 0 {
+            println!("\r\nNothing to add, closing\r\n");
+            return Ok(());
+        }
+        println!("\r\nAdd '{}' was successfull, closing\r\n", todo.trim());
+        self.todos.push(todo);
+
         Ok(())
     }
 
@@ -58,7 +65,7 @@ impl TodoList<String> {
         println!("remove: remove todo");
         println!("add: add todo");
     }
-    fn serve(mut file: File) -> std::io::Result<()> {
+    fn serve(file: File) -> std::io::Result<()> {
         let mut todo_list = TodoList::new(&file);
         todo_list.print();
 
@@ -71,32 +78,31 @@ impl TodoList<String> {
             "clear" => {
                 file.set_len(0)?;
                 println!("\r\nClear was successfull, closing\r\n");
-            },
+            }
             "remove" => {
                 println!("Press number of todo: ");
-                let remove_number = get_input()?
-                    .parse::<usize>().unwrap();
-                
+                let remove_number = get_input()?.parse::<usize>().unwrap();
                 if let Some(_) = todo_list.todos.get(remove_number - 1) {
                     todo_list.remove(remove_number);
-                    todo_list.save();
+                    todo_list.save()?;
                 } else {
                     println!("Wrong number = {:?}", remove_number);
                 }
-            },
+            }
             "add" => {
                 println!("\r\nWant to add something?");
                 let todo: String = get_input()?;
-                if todo.len() <= 0 {
-                    println!("\r\nNothing to add, closing\r\n");
-                    return Ok(());
-                }
+                todo_list.add(todo)?;
+                todo_list.save()?;
+                // if todo.len() <= 0 {
+                //     println!("\r\nNothing to add, closing\r\n");
+                //     return Ok(());
+                // }
 
-                println!("\r\nAdd '{}' was successfull, closing\r\n", todo.trim());
-                file.write_all(todo.trim().as_bytes())?;
+                // println!("\r\nAdd '{}' was successfull, closing\r\n", todo.trim());
+                // file.write_all(todo.trim().as_bytes())?;
             }
-            _ => ()
-
+            _ => (),
         }
         Ok(())
     }
