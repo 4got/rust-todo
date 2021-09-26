@@ -1,4 +1,8 @@
-Implement as struct
-Use struct static print method
-Add more functionality: remove, remove all
-Implement file read and write as TodoList struct methods
+Use struct static print method##false
+Add checked##true
+Remove complete bug##true
+Colorize##true
+Loop##true
+Add exit method##true
+Cover with tests##false
+Render on server##false
