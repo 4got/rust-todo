@@ -1,10 +1,11 @@
 [package]
+edition = "2018"
 name = "rust-todo"
 version = "0.1.0"
-edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ansi_term = "0.12"
 actix-web = "3"
+ansi_term = "0.12"
+askama = "0.8"

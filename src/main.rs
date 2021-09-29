@@ -78,12 +78,12 @@ impl TodoList<Todo<String>> {
     }
     #[allow(dead_code)]
     fn get_by_name(&self, name: String) -> &Todo<String> {
-        let ref a = self
+        &self
             .todos
             .iter()
             .find(|&todo| todo.content == name)
-            .unwrap();
-        &*a
+            .unwrap()
+        // &*a
     }
 
     fn has_item(&self, n: usize) -> bool {
@@ -241,27 +241,44 @@ impl TodoList<Todo<String>> {
             println!("{}. {}", i + 1, line.unwrap());
         }
     }
+
+    // fn as_vec(self) -> Vec<String> {
+    //     self.todos.iter().map(|t| t.content.to_string()).collect()
+    // }
 }
 
-use actix_web::{get, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_web::{get, web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result};
+use askama::Template;
+use std::collections::HashMap;
+
+#[derive(Template)]
+#[template(path = "home.html")]
+struct HomeTemplate {
+    todo_list: TodoList<Todo<String>>,
+}
 
 #[get("/")]
-async fn server() -> impl Responder {
+async fn home(query: web::Query<HashMap<String, String>>) -> Result<HttpResponse> {
     let file = TodoList::get_file();
     let todo_list = TodoList::new(&file);
 
-    let contents = todo_list.get(0).content.to_string();
-    HttpResponse::Ok().body(contents)
+    // let todos = todo_list.as_vec();
+
+    let s = HomeTemplate { todo_list }.render().unwrap();
+
+    Ok(HttpResponse::Ok().content_type("text/html").body(s))
 }
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let context = env::args().nth(1).unwrap_or_else(|| "".to_string());
     match context.as_str() {
-        "server" => HttpServer::new(|| App::new().service(server))
-            .bind(("127.0.0.1", 8080))?
-            .run()
-            .await
-            .unwrap(),
+        "server" => {
+            return HttpServer::new(move || App::new().service(home))
+                .bind(("127.0.0.1", 8080))?
+                .run()
+                .await
+        }
         _ => loop {
             let file = TodoList::get_file();
 

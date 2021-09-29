@@ -5,4 +5,5 @@ Colorize##true
 Loop##true
 Add exit method##true
 Cover with tests##false
-Render on server##false
+Render on server##true
+Add working form##false
