@@ -1,20 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
-<body>
-  <ul>
-    {% for todo in todo_list.todos %}
-    <li>
-      {{- loop.index0 }}. {{ todo.content }}
-      {% if todo.is_checked %}✓{% endif %}
-    </li>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
 
-    {% endfor %}
-  </ul>
-</body>
+    <link href="/static/assets/common.css" rel="stylesheet" />
+    <link
+      href="https://well.ru/local/modules/hotel.search/fonts/fa/css/all.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <form action="" method="post" id="todo_list" onsubmit="submitAction('new')">
+      <input type="hidden" value="" name="action" />
+      <input type="hidden" value="" name="index" />
+    </form>
+
+    <main class="page-main">
+      <div class="row">
+        <section class="card col-6">
+          <div class="contains-gui">
+            <h1>Todos:</h1>
+            <button class="button-icon" onclick="save()" type="button">
+              <i class="fas fa-save"></i>
+            </button>
+          </div>
+          <div class="list">
+            {% for todo in todo_list.todos %}
+            <div
+              class="list-item {% if todo.is_checked %}is-checked{% endif %}"
+            >
+              <div class="contains-gui">
+                <div class="list-marker">{{- loop.index0 + 1 }}</div>
+                <div class="df f-1 ml-1 ai-center">
+                  <div class="">
+                    {% if todo.is_checked %}
+                    <button
+                      class="button-icon"
+                      onclick="uncheck('{{- loop.index0 }}')"
+                      type="button"
+                    >
+                      <i class="fas fa-check-square"></i>
+                    </button>
+                    {% else %}
+                    <button
+                      class="button-icon"
+                      onclick="check('{{- loop.index0 }}')"
+                      type="button"
+                    >
+                      <i class="far fa-square"></i>
+                    </button>
+                    {% endif %}
+                  </div>
+                  <div class="df f-1 ml-1">
+                    <input class="f-1 input" value="{{ todo.content }}" />
+                  </div>
+                </div>
+
+                <div class="gui-hidden ml-1">
+                  <button
+                    class="button-icon"
+                    onclick="remove('{{- loop.index0 }}')"
+                  >
+                    <i class="fas fa-trash-alt"> </i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {% endfor %}
+          </div>
+
+          <div class="df ai-center mt-1">
+            <input
+              type="text"
+              class="input f-1"
+              name="new"
+              placeholder="Write a wish"
+              form="todo_list"
+            />
+            <button
+              class="button-icon ml-1"
+              onclick="submitAction('new')"
+              type="button"
+            >
+              <i class="fas fa-plus"> </i>
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      const submitAction = (action) => {
+        const actionInput = document.querySelector('[name="action"]');
+        actionInput.value = action;
+        actionInput.form.submit();
+      };
+      const input = (id) => document.querySelector(`[name="${id}"]`);
+      const check = (index) => {
+        input("index").value = parseInt(index, 10);
+        submitAction("check");
+      };
+      const uncheck = (index) => {
+        input("index").value = parseInt(index, 10);
+        submitAction("uncheck");
+      };
+      const remove = (index) => {
+        input("index").value = parseInt(index, 10);
+        submitAction("remove");
+      };
+      const save = () => {
+        submitAction("save");
+      };
+    </script>
+  </body>
 </html>
