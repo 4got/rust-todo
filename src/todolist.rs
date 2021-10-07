@@ -1,9 +1,9 @@
 use ansi_term::Colour::RGB;
-// use std::fs;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::{self, prelude::*, BufReader};
 
+use rusqlite::{Connection, Result};
 const TODOLIST_PATH: &str = "list.txt";
 
 pub fn get_input() -> std::io::Result<String> {
@@ -49,9 +49,6 @@ impl Todo<String> {
     pub fn uncheck(&mut self) {
         self.is_checked = false;
     }
-    // pub fn print(self, n: usize) {
-    //     println!("{}. {}", n, self.content);
-    // }
 }
 
 impl TodoList<Todo<String>> {
@@ -80,6 +77,7 @@ impl TodoList<Todo<String>> {
             .unwrap()
         // &*a
     }
+
     pub fn from_file() -> Self {
         let file = TodoList::get_file();
         Self::new(&file)
@@ -109,6 +107,11 @@ impl TodoList<Todo<String>> {
         );
         self.todos.push(todo);
         Ok(())
+    }
+
+    pub fn move_to(&mut self, from: usize, to: usize) {
+        let todo = self.todos.remove(from);
+        self.todos.insert(to, todo);
     }
 
     pub fn save(self) -> std::io::Result<()> {
@@ -239,7 +242,59 @@ impl TodoList<Todo<String>> {
         }
     }
 
-    // pub fn as_vec(self) -> Vec<String> {
-    //     self.todos.iter().map(|t| t.content.to_string()).collect()
-    // }
+    pub fn open_connection() -> Result<rusqlite::Connection> {
+        let conn = Connection::open("todos.db")?;
+
+        conn.execute(
+            "create table if not exists todos (
+                id integer primary key,
+                content text not null unique,
+                is_checked TINYINT(1) not null,
+                sort integer not null default 0
+            )",
+            [],
+        )?;
+
+        Ok(conn)
+    }
+    pub fn from_db() -> Self {
+        let conn = TodoList::open_connection().unwrap();
+        let mut stmt = conn
+            .prepare("SELECT (content, is_checked) from todos")
+            .unwrap();
+        let mut todo_list = TodoList { todos: vec![] };
+        let todos = stmt.query_map([], |row| {
+            // let is_check = row.get(0)?;
+            Ok(Todo {
+                content: row.get(0)?,
+                is_checked: match <i32>::from(row.get(1)?) {
+                    1 => true,
+                    _ => false,
+                },
+            })
+        });
+        if let Ok(todos) = todos {
+            for todo in todos {
+                if let Ok(todo) = todo {
+                    todo_list.todos.push(todo);
+                }
+            }
+        }
+        todo_list
+    }
+
+    pub fn __add(todo: Todo<String>) -> Result<usize, rusqlite::Error> {
+        let conn = TodoList::open_connection().unwrap();
+        conn.execute(
+            "INSERT INTO todos (content, is_checked) values (?1, ?2)",
+            [
+                todo.content.to_string(),
+                if todo.is_checked {
+                    1.to_string()
+                } else {
+                    0.to_string()
+                },
+            ],
+        )
+    }
 }

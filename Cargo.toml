@@ -16,3 +16,7 @@ actix-web-static-files = "3.0"
 
 [build-dependencies]
 actix-web-static-files = "3.0"
+
+[dependencies.rusqlite]
+version = "0.26.0"
+features = ["bundled"]

@@ -13,107 +13,176 @@
     />
   </head>
   <body>
-    <form action="" method="post" id="todo_list" onsubmit="submitAction('new')">
-      <input type="hidden" value="" name="action" />
-      <input type="hidden" value="" name="index" />
-    </form>
+    <form action="" method="post" id="todo_list">
+      <input type="hidden" name="action" />
+      <input type="hidden" name="index" />
+      <input type="hidden" name="update" />
+      <input type="hidden" name="move_to" />
 
-    <main class="page-main">
-      <div class="row">
-        <section class="card col-6">
-          <div class="contains-gui">
-            <h1>Todos:</h1>
-            <button class="button-icon" onclick="save()" type="button">
-              <i class="fas fa-save"></i>
-            </button>
-          </div>
-          <div class="list">
-            {% for todo in todo_list.todos %}
-            <div
-              class="list-item {% if todo.is_checked %}is-checked{% endif %}"
-            >
-              <div class="contains-gui">
-                <div class="list-marker">{{- loop.index0 + 1 }}</div>
-                <div class="df f-1 ml-1 ai-center">
-                  <div class="">
-                    {% if todo.is_checked %}
-                    <button
-                      class="button-icon"
-                      onclick="uncheck('{{- loop.index0 }}')"
-                      type="button"
-                    >
-                      <i class="fas fa-check-square"></i>
-                    </button>
-                    {% else %}
-                    <button
-                      class="button-icon"
-                      onclick="check('{{- loop.index0 }}')"
-                      type="button"
-                    >
-                      <i class="far fa-square"></i>
-                    </button>
-                    {% endif %}
-                  </div>
-                  <div class="df f-1 ml-1">
-                    <input class="f-1 input" value="{{ todo.content }}" />
-                  </div>
-                </div>
-
-                <div class="gui-hidden ml-1">
-                  <button
-                    class="button-icon"
-                    onclick="remove('{{- loop.index0 }}')"
-                  >
-                    <i class="fas fa-trash-alt"> </i>
-                  </button>
-                </div>
+      <main class="page-main">
+        <div class="row">
+          <section class="card col-6">
+            <div class="contains-gui">
+              <h1>Todos:</h1>
+              <div class="df set">
+                <button
+                  style="display: none"
+                  class="button-icon"
+                  onclick="reload()"
+                  type="button"
+                >
+                  <i class="fas fa-redo-alt"></i>
+                </button>
+                <button
+                  style="display: none"
+                  class="button-icon"
+                  onclick="save()"
+                  type="button"
+                >
+                  <i class="fas fa-save"></i>
+                </button>
               </div>
             </div>
+            <div class="list">
+              {% for todo in todo_list.todos %}
+              <div
+                class="list-item {% if todo.is_checked %}is-checked{% endif %}"
+              >
+                <div class="contains-gui">
+                  <div class="list-marker">{{- loop.index0 + 1 }}</div>
+                  <div class="df f-1 ml-1 ai-center">
+                    <div class="">
+                      {% if todo.is_checked %}
+                      <button
+                        class="button-icon"
+                        onclick="uncheck('{{- loop.index0 }}')"
+                        type="button"
+                      >
+                        <i class="fas fa-check-square"></i>
+                      </button>
+                      {% else %}
+                      <button
+                        class="button-icon"
+                        onclick="check('{{- loop.index0 }}')"
+                        type="button"
+                      >
+                        <i class="far fa-square"></i>
+                      </button>
+                      {% endif %}
+                    </div>
+                    <div class="df f-1 ml-1">
+                      <input
+                        class="f-1 input"
+                        value="{{ todo.content }}"
+                        oninput="rewrite('{{- loop.index0 }}')"
+                        onkeypress="onEnterSave()"
+                        form="todo_list"
+                      />
+                    </div>
+                  </div>
 
-            {% endfor %}
-          </div>
+                  <div class="set gui-hidden ml-1">
+                    {% if !loop.first %}
+                    <button
+                      type="button"
+                      class="button-icon"
+                      onclick="move('{{- loop.index0 }}', '{{- loop.index0 - 1 }}')"
+                    >
+                      <i class="fas fa-chevron-up"> </i>
+                    </button>
+                    {% endif %} {% if !loop.last %}
+                    <button
+                      type="button"
+                      class="button-icon"
+                      onclick="move('{{- loop.index0 }}', '{{- loop.index0 + 1 }}')"
+                    >
+                      <i class="fas fa-chevron-down"> </i>
+                    </button>
+                    {% endif %}
+                    <button
+                      type="button"
+                      class="button-icon"
+                      onclick="remove('{{- loop.index0 }}')"
+                    >
+                      <i class="fas fa-trash-alt"> </i>
+                    </button>
+                  </div>
+                </div>
+              </div>
 
-          <div class="df ai-center mt-1">
-            <input
-              type="text"
-              class="input f-1"
-              name="new"
-              placeholder="Write a wish"
-              form="todo_list"
-            />
-            <button
-              class="button-icon ml-1"
-              onclick="submitAction('new')"
-              type="button"
-            >
-              <i class="fas fa-plus"> </i>
-            </button>
-          </div>
-        </section>
-      </div>
-    </main>
+              {% endfor %}
+            </div>
 
+            <div class="df ai-center mt-1">
+              <input
+                type="text"
+                class="input f-1"
+                name="new"
+                placeholder="Write a wish"
+                onkeypress="onEnterNew()"
+                form="todo_list"
+              />
+              <ibutton />
+            </div>
+          </section>
+        </div>
+      </main>
+    </form>
     <script>
-      const submitAction = (action) => {
-        const actionInput = document.querySelector('[name="action"]');
-        actionInput.value = action;
-        actionInput.form.submit();
-      };
+      const onEnter =
+        (cb) =>
+        (e = window.event) => {
+          const keyCode = e.code || e.key;
+          if (keyCode == "Enter") {
+            return cb();
+          }
+        };
+      const toUpdate = [];
+      const saveButton = document.querySelector('[onclick="save()"]');
+      const reloadButton = document.querySelector('[onclick="reload()"]');
       const input = (id) => document.querySelector(`[name="${id}"]`);
+      const submitAction = (action) => {
+        input("action").value = action;
+        input("action").form.submit();
+      };
       const check = (index) => {
-        input("index").value = parseInt(index, 10);
+        input("index").value = index;
         submitAction("check");
       };
       const uncheck = (index) => {
-        input("index").value = parseInt(index, 10);
+        input("index").value = index;
         submitAction("uncheck");
       };
       const remove = (index) => {
-        input("index").value = parseInt(index, 10);
+        input("index").value = index;
         submitAction("remove");
       };
+      const rewrite = (index) => {
+        saveButton.style.display = "";
+        reloadButton.style.display = "";
+        const content = window.event.target.value;
+        const found = toUpdate.find((t) => t.index === index);
+        if (found) {
+          found.content = content;
+        } else toUpdate.push({ index, content });
+      };
+      const move = (from, to) => {
+        input("index").value = from;
+        input("move_to").value = to;
+        submitAction("move");
+      };
+      const reload = window.location.reload;
       const save = () => {
+        input("update").value = toUpdate
+          .map((u) => `${u.index}##${u.content}`)
+          .join("\n");
         submitAction("save");
+      };
+      const onEnterNew = (e = window.event) => {
+        onEnter(() => submitAction("new"))();
+      };
+      const onEnterSave = (e = window.event) => {
+        onEnter(save)();
       };
     </script>
   </body>

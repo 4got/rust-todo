@@ -1,10 +1,10 @@
-Use struct static print method##false
-Cover with tests##false
 Love Maria##true
-Add from gui##true
-Add edit method##false
+Cover with tests##false
+Add move methods##true
 Add front error handling##false
-Add visual differentiation or todos by checked flag##true
-Add move methods##false
-Add save button##true
-Show save button oninput##false
+Show save button oninput!##true
+Web components##false
+Database##false
+Archive##false
+Rework update form field##false
+Unique content error handle##false

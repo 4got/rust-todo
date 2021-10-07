@@ -129,3 +129,11 @@
 .ai-center {
   align-items: center;
 }
+.set {
+  margin-right: -0.4rem;
+  margin-bottom: -0.4rem;
+}
+.set > * {
+  margin-right: 0.4rem;
+  margin-bottom: 0.4rem;
+}
