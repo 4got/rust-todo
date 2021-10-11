@@ -20,20 +20,34 @@ pub mod tests {
     //     let item = todo_list.get_by_name("Cover with tests".to_string());
     //     assert_eq!(item.is_checked, false);
     // }
+    #[test]
+    fn show_todolist() {
+        // let todo_list = TodoList::from_db();
+        // TodoList::add_to_db(Todo::new(String::from("True"), true)).unwrap();
+        let todo_list = TodoList::from_db();
+        todo_list.print();
+        assert_eq!(10, todo_list.todos.len());
+    }
     // #[test]
     // fn insert_todo_to_db() {
-    //     // let todo_list = TodoList::from_file();
-    //     let added_index = TodoList::__add(Todo::new(String::from("Hi"), false));
-    //     assert_eq!(added_index, Ok(2));
+    //     let added_index = TodoList::add_to_db(Todo::new(String::from("Fine"), true));
+    //     assert_eq!(added_index, Ok(4));
     // }
-    #[test]
-    fn migrate_from_files_to_db() {
-        let todo_list = TodoList::from_db();
-        assert_eq!(1, todo_list.todos.len());
-        for todo in todo_list.todos {
-            assert_eq!("", todo.content);
-        }
-    }
+    // #[test]
+    // fn migrate_from_files_to_db() {
+    //     let todo_list_from_file = TodoList::from_file();
+
+    //     for todo in todo_list_from_file.todos {
+    //         TodoList::add_to_db(Todo {
+    //             content: todo.content,
+    //             is_checked: todo.is_checked,
+    //         })
+    //         .expect("Cannot add todo to db");
+    //     }
+    //     let todo_list = TodoList::from_db();
+
+    //     assert_eq!(10, todo_list.todos.len());
+    // }
     // #[test]
     // fn last_item_is_unchecked() {
     //     let file = TodoList::get_file();

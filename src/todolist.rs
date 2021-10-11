@@ -3,7 +3,7 @@ use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::{self, prelude::*, BufReader};
 
-use rusqlite::{Connection, Result};
+use rusqlite::{params, Connection, Result};
 const TODOLIST_PATH: &str = "list.txt";
 
 pub fn get_input() -> std::io::Result<String> {
@@ -134,9 +134,7 @@ impl TodoList<Todo<String>> {
 
     pub fn print(&self) -> () {
         println!("\r\n{}\r\n", RGB(127, 255, 127).paint("Todo List"));
-        // self.todos[0].print(1);
         for (i, todo) in self.todos.iter().enumerate() {
-            // todo.print(i + 1);
             if todo.is_checked {
                 println!(
                     "{}. {} {}",
@@ -164,8 +162,15 @@ impl TodoList<Todo<String>> {
         println!("restart: {}", RGB(166, 166, 166).paint("restart todo"));
         println!("exit: {}", RGB(166, 166, 166).paint("exit"));
     }
-    pub fn serve(file: File) -> std::io::Result<String> {
-        let mut todo_list = TodoList::new(&file);
+    pub fn serve(file: Option<File>) -> std::io::Result<String> {
+        let mut todo_list;
+        let mut is_file = false;
+        if let Some(ref file) = file {
+            todo_list = TodoList::new(&file);
+            is_file = true;
+        } else {
+            todo_list = TodoList::from_db();
+        }
         todo_list.print();
 
         // interface
@@ -175,7 +180,9 @@ impl TodoList<Todo<String>> {
         let command: String = get_input()?;
         match command.as_str() {
             "clear" => {
-                file.set_len(0)?;
+                if is_file {
+                    file.unwrap().set_len(0)?;
+                }
                 println!("\r\nClear was successfull, closing\r\n");
             }
             "remove" => {
@@ -252,7 +259,7 @@ impl TodoList<Todo<String>> {
                 is_checked TINYINT(1) not null,
                 sort integer not null default 0
             )",
-            [],
+            params![],
         )?;
 
         Ok(conn)
@@ -260,17 +267,13 @@ impl TodoList<Todo<String>> {
     pub fn from_db() -> Self {
         let conn = TodoList::open_connection().unwrap();
         let mut stmt = conn
-            .prepare("SELECT (content, is_checked) from todos")
+            .prepare("SELECT content, is_checked from todos")
             .unwrap();
         let mut todo_list = TodoList { todos: vec![] };
         let todos = stmt.query_map([], |row| {
-            // let is_check = row.get(0)?;
             Ok(Todo {
                 content: row.get(0)?,
-                is_checked: match <i32>::from(row.get(1)?) {
-                    1 => true,
-                    _ => false,
-                },
+                is_checked: <bool>::from(row.get(1).unwrap()),
             })
         });
         if let Ok(todos) = todos {
@@ -282,12 +285,11 @@ impl TodoList<Todo<String>> {
         }
         todo_list
     }
-
-    pub fn __add(todo: Todo<String>) -> Result<usize, rusqlite::Error> {
+    pub fn add_to_db(todo: Todo<String>) -> Result<usize, rusqlite::Error> {
         let conn = TodoList::open_connection().unwrap();
         conn.execute(
             "INSERT INTO todos (content, is_checked) values (?1, ?2)",
-            [
+            params![
                 todo.content.to_string(),
                 if todo.is_checked {
                     1.to_string()

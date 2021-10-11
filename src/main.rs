@@ -112,10 +112,20 @@ async fn main() -> std::io::Result<()> {
             .run()
             .await;
         }
-        _ => loop {
+        "dev" => {
+            let todo_list = TodoList::from_db();
+            todo_list.print();
+        }
+        "file" => loop {
             let file = TodoList::get_file();
-
-            if let Ok(then) = TodoList::serve(file) {
+            if let Ok(then) = TodoList::serve(Some(file)) {
+                if then.as_str() == "Exit" {
+                    break;
+                }
+            }
+        },
+        _ => loop {
+            if let Ok(then) = TodoList::serve(None) {
                 if then.as_str() == "Exit" {
                     break;
                 }
