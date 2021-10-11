@@ -114,7 +114,9 @@ impl TodoList<Todo<String>> {
         self.todos.insert(to, todo);
     }
 
-    pub fn save(self) -> std::io::Result<()> {
+    pub fn save(self, file: Option<File>) -> std::io::Result<()> {
+        // if let File {
+        // }
         let mut file = OpenOptions::new()
             .write(true)
             .create(true)
@@ -192,7 +194,7 @@ impl TodoList<Todo<String>> {
                 if todo_list.has_item(remove_number - 1) {
                     todo_list.remove(remove_number - 1);
                     todo_list.print();
-                    todo_list.save()?;
+                    todo_list.save(file)?;
                 } else {
                     println!("Wrong number = {:?}", remove_number);
                 }
