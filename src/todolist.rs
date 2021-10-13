@@ -114,9 +114,7 @@ impl TodoList<Todo<String>> {
         self.todos.insert(to, todo);
     }
 
-    pub fn save(self, file: Option<File>) -> std::io::Result<()> {
-        // if let File {
-        // }
+    pub fn save(self) -> std::io::Result<()> {
         let mut file = OpenOptions::new()
             .write(true)
             .create(true)
@@ -194,7 +192,7 @@ impl TodoList<Todo<String>> {
                 if todo_list.has_item(remove_number - 1) {
                     todo_list.remove(remove_number - 1);
                     todo_list.print();
-                    todo_list.save(file)?;
+                    todo_list.save()?;
                 } else {
                     println!("Wrong number = {:?}", remove_number);
                 }
@@ -251,11 +249,12 @@ impl TodoList<Todo<String>> {
         }
     }
 
+    // db
     pub fn open_connection() -> Result<rusqlite::Connection> {
         let conn = Connection::open("todos.db")?;
 
         conn.execute(
-            "create table if not exists todos (
+            "CREATE table if not exists todos (
                 id integer primary key,
                 content text not null unique,
                 is_checked TINYINT(1) not null,
@@ -300,5 +299,17 @@ impl TodoList<Todo<String>> {
                 },
             ],
         )
+    }
+    pub fn clear_db() -> Result<usize, rusqlite::Error> {
+        let conn = TodoList::open_connection()?;
+        conn.execute("DELETE from todos", [])
+    }
+    pub fn save_to_db(self) -> std::io::Result<()> {
+        TodoList::clear_db();
+        let conn = TodoList::open_connection().unwrap();
+        for todo in self.todos {
+            TodoList::add_to_db(todo);
+        }
+        Ok(())
     }
 }
