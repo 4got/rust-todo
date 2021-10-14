@@ -806,6 +806,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "global_counter"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2a77c0a6d353621e0ba32c0eb64a5ed3832d900135712779e38bd2ea31d6509f"
+dependencies = [
+ "once_cell",
+ "parking_lot",
+]
+
+[[package]]
 name = "h2"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1433,6 +1443,7 @@ dependencies = [
  "actix-web-static-files",
  "ansi_term",
  "askama",
+ "global_counter",
  "rusqlite",
  "serde",
 ]

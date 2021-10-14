@@ -26,25 +26,23 @@ pub mod tests {
     #[ignore]
     #[test]
     fn insert_todo_to_db() {
-        let added_index = TodoList::add_to_db(Todo::new(String::from("Fine"), true));
-        assert_eq!(added_index, Ok(4));
+        TodoList::add_to_db(Todo::new(String::from("Add completion by index"), false)).unwrap();
+        let todo_list = TodoList::from_db();
+        todo_list.print();
+        assert_eq!(11, todo_list.todos.len());
     }
-    // #[ignore]
+    #[ignore]
     #[test]
     fn migrate_from_files_to_db() {
         TodoList::clear_db().unwrap();
         let todo_list_from_file = TodoList::from_file();
+        todo_list_from_file.print();
 
-        for todo in todo_list_from_file.todos {
-            TodoList::add_to_db(Todo {
-                content: todo.content,
-                is_checked: todo.is_checked,
-            })
-            .expect("Cannot add todo to db");
-        }
-        let todo_list = TodoList::from_db();
+        assert_eq!(10, todo_list_from_file.save_to_db().unwrap());
 
-        assert_eq!(10, todo_list.todos.len());
+        // let todo_list = TodoList::from_db();
+
+        // assert_eq!(10, todo_list.todos.len());
     }
     #[ignore]
     #[test]
@@ -53,7 +51,7 @@ pub mod tests {
         // TodoList::add_to_db(Todo::new(String::from("True"), true)).unwrap();
         let todo_list = TodoList::from_db();
         todo_list.print();
-        assert_eq!(0, todo_list.todos.len());
+        assert_eq!(10, todo_list.todos.len());
     }
     #[ignore]
     #[test]
@@ -62,4 +60,16 @@ pub mod tests {
         let todo_list = TodoList::from_db();
         assert_eq!(0, todo_list.todos.len());
     }
+    // #[ignore]
+    #[test]
+    fn complete_todo_in_db() {
+        let todo_list = TodoList::from_db();
+        TodoList::complete_in_db(todo_list.todos[6].id).unwrap();
+        TodoList::uncomplete_in_db(todo_list.todos[7].id).unwrap();
+        let todo_list = TodoList::from_db();
+        todo_list.print();
+        assert_eq!(true, todo_list.todos[6].is_checked);
+        assert_ne!(true, todo_list.todos[7].is_checked);
+    }
 }
+//

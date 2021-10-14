@@ -3,8 +3,8 @@ use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::{self, prelude::*, BufReader};
 
+use global_counter::primitive::exact::CounterUsize;
 use rusqlite::{params, Connection, Result};
-const TODOLIST_PATH: &str = "list.txt";
 
 pub fn get_input() -> std::io::Result<String> {
     let mut input = String::new();
@@ -12,11 +12,19 @@ pub fn get_input() -> std::io::Result<String> {
     Ok(input.trim().to_string())
 }
 
+const TODOLIST_PATH: &str = "list.txt";
+static LAST_ID: CounterUsize = CounterUsize::new(0);
+pub fn last_id() -> usize {
+    LAST_ID.inc();
+    LAST_ID.get()
+}
+
 pub struct TodoList<T> {
     pub todos: Vec<T>,
 }
 
 pub struct Todo<T> {
+    pub id: usize,
     pub content: T,
     pub is_checked: bool,
 }
@@ -24,6 +32,7 @@ pub struct Todo<T> {
 impl Todo<String> {
     pub fn new(content: String, is_checked: bool) -> Self {
         Self {
+            id: last_id(),
             content,
             is_checked,
         }
@@ -182,6 +191,8 @@ impl TodoList<Todo<String>> {
             "clear" => {
                 if is_file {
                     file.unwrap().set_len(0)?;
+                } else {
+                    TodoList::clear_db().unwrap();
                 }
                 println!("\r\nClear was successfull, closing\r\n");
             }
@@ -192,7 +203,11 @@ impl TodoList<Todo<String>> {
                 if todo_list.has_item(remove_number - 1) {
                     todo_list.remove(remove_number - 1);
                     todo_list.print();
-                    todo_list.save()?;
+                    if is_file {
+                        todo_list.save()?;
+                    } else {
+                        todo_list.save_to_db().unwrap();
+                    }
                 } else {
                     println!("Wrong number = {:?}", remove_number);
                 }
@@ -200,15 +215,24 @@ impl TodoList<Todo<String>> {
             "add" => {
                 println!("\r\nWant to add something?");
                 let todo: String = get_input()?;
-                todo_list.add(Todo::new(todo, false))?;
-                todo_list.save()?;
+                if is_file {
+                    todo_list.add(Todo::new(todo, false))?;
+                    todo_list.save()?;
+                } else {
+                    TodoList::add_to_db(Todo::new(todo, false)).unwrap();
+                }
             }
             "complete" => {
                 println!("Press number of todo: ");
                 let check_number = get_input()?.parse::<usize>().unwrap();
                 if todo_list.has_item(check_number) {
-                    todo_list.todos[check_number - 1].check();
-                    todo_list.save()?;
+                    if is_file {
+                        todo_list.todos[check_number - 1].check();
+                        todo_list.save()?;
+                    } else {
+                        let ref todo = todo_list.todos[check_number - 1];
+                        TodoList::complete_in_db(todo.id).unwrap();
+                    }
                 } else {
                     println!("Wrong number = {:?}", check_number);
                 }
@@ -267,14 +291,15 @@ impl TodoList<Todo<String>> {
     }
     pub fn from_db() -> Self {
         let conn = TodoList::open_connection().unwrap();
-        let mut stmt = conn
-            .prepare("SELECT content, is_checked from todos")
-            .unwrap();
         let mut todo_list = TodoList { todos: vec![] };
+        let mut stmt = conn
+            .prepare("SELECT id, content, is_checked from todos")
+            .unwrap();
         let todos = stmt.query_map([], |row| {
             Ok(Todo {
-                content: row.get(0)?,
-                is_checked: <bool>::from(row.get(1).unwrap()),
+                id: row.get(0)?,
+                content: row.get(1)?,
+                is_checked: <bool>::from(row.get(2).unwrap()),
             })
         });
         if let Ok(todos) = todos {
@@ -304,12 +329,28 @@ impl TodoList<Todo<String>> {
         let conn = TodoList::open_connection()?;
         conn.execute("DELETE from todos", [])
     }
-    pub fn save_to_db(self) -> std::io::Result<()> {
-        TodoList::clear_db();
-        let conn = TodoList::open_connection().unwrap();
+    pub fn save_to_db(self) -> Result<usize, rusqlite::Error> {
+        TodoList::clear_db().unwrap();
+        let mut result = 0;
         for todo in self.todos {
-            TodoList::add_to_db(todo);
+            if let Ok(index) = TodoList::add_to_db(todo) {
+                result += index;
+            }
         }
-        Ok(())
+        Ok(result)
+    }
+    pub fn complete_in_db(id: usize) -> Result<usize, rusqlite::Error> {
+        let conn = TodoList::open_connection().unwrap();
+        conn.execute(
+            "UPDATE todos SET is_checked = '1' WHERE id = ?",
+            params![id],
+        )
+    }
+    pub fn uncomplete_in_db(id: usize) -> Result<usize, rusqlite::Error> {
+        let conn = TodoList::open_connection().unwrap();
+        conn.execute(
+            "UPDATE todos SET is_checked = '0' WHERE id = ?",
+            params![id],
+        )
     }
 }
