@@ -33,8 +33,10 @@ struct Request {
     update: String,
     move_to: String,
 }
-#[post("/")]
-async fn home_post(form: web::Form<Request>) -> Result<HttpResponse> {
+// #[post("/")]
+#[deprecated(since = "0.1.0", note = "please use `home_post` instead")]
+#[allow(dead_code)]
+async fn home_post_file(form: web::Form<Request>) -> Result<HttpResponse> {
     let mut todo_list = TodoList::from_file();
     // let mut todo_list = TodoList::from_db();
 
@@ -85,6 +87,64 @@ async fn home_post(form: web::Form<Request>) -> Result<HttpResponse> {
     }
 
     todo_list.save()?;
+    Ok(HttpResponse::Found().header("Location", "/").finish())
+}
+
+#[post("/")]
+async fn home_post(form: web::Form<Request>) -> Result<HttpResponse> {
+    let mut todo_list = TodoList::from_db();
+
+    let mut action = form.action.to_string();
+    let index = if form.index.to_string().len() > 0 {
+        form.index.to_string().parse::<usize>().unwrap()
+    } else {
+        0
+    };
+
+    if action.len() == 0 {
+        action = if form.new.to_string().len() > 0 {
+            String::from("new")
+        } else {
+            String::from("save")
+        };
+    }
+    match action.as_str() {
+        "check" => {
+            TodoList::complete_in_db(index).unwrap();
+        }
+        "uncheck" => {
+            TodoList::uncomplete_in_db(index).unwrap();
+        }
+        "remove" => todo_list.remove(index),
+        "save" => {
+            let to_update: Vec<(usize, String)> = form
+                .update
+                .to_string()
+                .split("\n")
+                .map(|l| {
+                    let l = l.to_string();
+                    let entries = l.split("##").collect::<Vec<&str>>();
+                    (entries[0].parse::<usize>().unwrap(), entries[1].to_string())
+                })
+                .collect();
+            for (index, content) in to_update {
+                todo_list.todos[index].content = content;
+            }
+        }
+        "move" => {
+            let to = form.move_to.parse::<usize>().unwrap();
+            todo_list.move_to(index, to);
+        }
+        "new" => {
+            let content = form.new.to_string();
+            if content.len() > 0 {
+                todo_list.add(Todo::new(content, false))?;
+            }
+        }
+        _ => (),
+    }
+
+    // todo_list.save_to_db().unwrap();
     Ok(HttpResponse::Found().header("Location", "/").finish())
 }
 

@@ -241,8 +241,13 @@ impl TodoList<Todo<String>> {
                 println!("Press number of todo: ");
                 let uncheck_number = get_input()?.parse::<usize>().unwrap();
                 if todo_list.has_item(uncheck_number) {
-                    todo_list.todos[uncheck_number - 1].uncheck();
-                    todo_list.save()?;
+                    if is_file {
+                        todo_list.todos[uncheck_number - 1].uncheck();
+                        todo_list.save()?;
+                    } else {
+                        let ref todo = todo_list.todos[uncheck_number - 1];
+                        TodoList::uncomplete_in_db(todo.id).unwrap();
+                    }
                 } else {
                     println!("Wrong number = {:?}", uncheck_number);
                 }

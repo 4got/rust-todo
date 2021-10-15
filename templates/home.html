@@ -49,13 +49,15 @@
                 class="list-item {% if todo.is_checked %}is-checked{% endif %}"
               >
                 <div class="contains-gui">
-                  <div class="list-marker">{{- loop.index0 + 1 }}</div>
+                  <div class="list-marker">
+                    {{- loop.index0 + 1 }} {{ todo.id }}
+                  </div>
                   <div class="df f-1 ml-1 ai-center">
                     <div class="">
                       {% if todo.is_checked %}
                       <button
                         class="button-icon"
-                        onclick="uncheck('{{- loop.index0 }}')"
+                        onclick="uncheck('{{ todo.id }}')"
                         type="button"
                       >
                         <i class="fas fa-check-square"></i>
@@ -63,7 +65,7 @@
                       {% else %}
                       <button
                         class="button-icon"
-                        onclick="check('{{- loop.index0 }}')"
+                        onclick="check('{{ todo.id }}')"
                         type="button"
                       >
                         <i class="far fa-square"></i>
@@ -74,7 +76,7 @@
                       <input
                         class="f-1 input"
                         value="{{ todo.content }}"
-                        oninput="rewrite('{{- loop.index0 }}')"
+                        oninput="rewrite('{{ todo.id }}')"
                         onkeypress="onEnterSave()"
                         form="todo_list"
                       />
@@ -133,7 +135,7 @@
         (cb) =>
         (e = window.event) => {
           const keyCode = e.code || e.key;
-          if (keyCode == "Enter") {
+          if (keyCode == 'Enter') {
             return cb();
           }
         };
@@ -142,24 +144,24 @@
       const reloadButton = document.querySelector('[onclick="reload()"]');
       const input = (id) => document.querySelector(`[name="${id}"]`);
       const submitAction = (action) => {
-        input("action").value = action;
-        input("action").form.submit();
+        input('action').value = action;
+        input('action').form.submit();
       };
       const check = (index) => {
-        input("index").value = index;
-        submitAction("check");
+        input('index').value = index;
+        submitAction('check');
       };
       const uncheck = (index) => {
-        input("index").value = index;
-        submitAction("uncheck");
+        input('index').value = index;
+        submitAction('uncheck');
       };
       const remove = (index) => {
-        input("index").value = index;
-        submitAction("remove");
+        input('index').value = index;
+        submitAction('remove');
       };
       const rewrite = (index) => {
-        saveButton.style.display = "";
-        reloadButton.style.display = "";
+        saveButton.style.display = '';
+        reloadButton.style.display = '';
         const content = window.event.target.value;
         const found = toUpdate.find((t) => t.index === index);
         if (found) {
@@ -167,19 +169,19 @@
         } else toUpdate.push({ index, content });
       };
       const move = (from, to) => {
-        input("index").value = from;
-        input("move_to").value = to;
-        submitAction("move");
+        input('index').value = from;
+        input('move_to').value = to;
+        submitAction('move');
       };
       const reload = window.location.reload;
       const save = () => {
-        input("update").value = toUpdate
+        input('update').value = toUpdate
           .map((u) => `${u.index}##${u.content}`)
-          .join("\n");
-        submitAction("save");
+          .join('\n');
+        submitAction('save');
       };
       const onEnterNew = (e = window.event) => {
-        onEnter(() => submitAction("new"))();
+        onEnter(() => submitAction('new'))();
       };
       const onEnterSave = (e = window.event) => {
         onEnter(save)();
