@@ -19,7 +19,6 @@ struct HomeTemplate {
 #[get("/")]
 async fn home() -> Result<HttpResponse> {
     let todo_list = TodoList::from_db();
-    // let todo_list = TodoList::from_file();
     let s = HomeTemplate { todo_list }.render().unwrap();
 
     Ok(HttpResponse::Ok().content_type("text/html").body(s))
@@ -38,7 +37,6 @@ struct Request {
 #[allow(dead_code)]
 async fn home_post_file(form: web::Form<Request>) -> Result<HttpResponse> {
     let mut todo_list = TodoList::from_file();
-    // let mut todo_list = TodoList::from_db();
 
     let mut action = form.action.to_string();
     let index = if form.index.to_string().len() > 0 {
@@ -115,7 +113,9 @@ async fn home_post(form: web::Form<Request>) -> Result<HttpResponse> {
         "uncheck" => {
             TodoList::uncomplete_in_db(index).unwrap();
         }
-        "remove" => todo_list.remove(index),
+        "remove" => {
+            TodoList::delete_in_db(index).unwrap();
+        }
         "save" => {
             let to_update: Vec<(usize, String)> = form
                 .update
@@ -128,7 +128,8 @@ async fn home_post(form: web::Form<Request>) -> Result<HttpResponse> {
                 })
                 .collect();
             for (index, content) in to_update {
-                todo_list.todos[index].content = content;
+                TodoList::update_in_db(index, content).unwrap();
+                // todo_list.todos[index].content = content;
             }
         }
         "move" => {
@@ -138,7 +139,7 @@ async fn home_post(form: web::Form<Request>) -> Result<HttpResponse> {
         "new" => {
             let content = form.new.to_string();
             if content.len() > 0 {
-                todo_list.add(Todo::new(content, false))?;
+                TodoList::add_to_db(Todo::new(content, false)).unwrap();
             }
         }
         _ => (),

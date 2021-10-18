@@ -39,16 +39,10 @@ pub mod tests {
         todo_list_from_file.print();
 
         assert_eq!(10, todo_list_from_file.save_to_db().unwrap());
-
-        // let todo_list = TodoList::from_db();
-
-        // assert_eq!(10, todo_list.todos.len());
     }
     #[ignore]
     #[test]
     fn show_todolist() {
-        // let todo_list = TodoList::from_db();
-        // TodoList::add_to_db(Todo::new(String::from("True"), true)).unwrap();
         let todo_list = TodoList::from_db();
         todo_list.print();
         assert_eq!(10, todo_list.todos.len());
@@ -60,7 +54,7 @@ pub mod tests {
         let todo_list = TodoList::from_db();
         assert_eq!(0, todo_list.todos.len());
     }
-    // #[ignore]
+    #[ignore]
     #[test]
     fn complete_todo_in_db() {
         let todo_list = TodoList::from_db();
@@ -71,5 +65,24 @@ pub mod tests {
         assert_eq!(true, todo_list.todos[6].is_checked);
         assert_ne!(true, todo_list.todos[7].is_checked);
     }
+    #[ignore]
+    #[test]
+    fn update_todo_in_db() {
+        let todo_list = TodoList::from_db();
+        TodoList::update_in_db(todo_list.todos[11].id, String::from("Delete me")).unwrap();
+        let todo_list = TodoList::from_db();
+        todo_list.print();
+        assert_eq!(String::from("Delete me"), todo_list.todos[11].content);
+    }
+    #[ignore]
+    #[test]
+    fn delete_todo_in_db() {
+        let todo_list = TodoList::from_db();
+        let prev_len = todo_list.len();
+        let id = todo_list.todos[prev_len - 1].id;
+        TodoList::delete_in_db(id).unwrap();
+        let todo_list_2 = TodoList::from_db();
+        todo_list_2.print();
+        assert_eq!(prev_len - 2, todo_list.len());
+    }
 }
-//

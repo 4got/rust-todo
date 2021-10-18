@@ -73,6 +73,10 @@ impl TodoList<Todo<String>> {
         Self { todos }
     }
     #[allow(dead_code)]
+    pub fn len(&self) -> usize {
+        self.todos.len()
+    }
+    #[allow(dead_code)]
     pub fn get(&self, n: usize) -> &Todo<String> {
         let ref a = self.todos[n];
         &*a
@@ -84,8 +88,9 @@ impl TodoList<Todo<String>> {
             .iter()
             .find(|&todo| todo.content == name)
             .unwrap()
-        // &*a
     }
+
+    pub fn last_sort_value() {}
 
     pub fn from_file() -> Self {
         let file = TodoList::get_file();
@@ -316,6 +321,10 @@ impl TodoList<Todo<String>> {
         }
         todo_list
     }
+    pub fn delete_in_db(id: usize) -> Result<usize, rusqlite::Error> {
+        let conn = TodoList::open_connection().unwrap();
+        conn.execute("DELETE from todos WHERE id = ?", params![id])
+    }
     pub fn add_to_db(todo: Todo<String>) -> Result<usize, rusqlite::Error> {
         let conn = TodoList::open_connection().unwrap();
         conn.execute(
@@ -356,6 +365,13 @@ impl TodoList<Todo<String>> {
         conn.execute(
             "UPDATE todos SET is_checked = '0' WHERE id = ?",
             params![id],
+        )
+    }
+    pub fn update_in_db(id: usize, content: String) -> Result<usize, rusqlite::Error> {
+        let conn = TodoList::open_connection().unwrap();
+        conn.execute(
+            "UPDATE todos SET content = ?1 WHERE id = ?2",
+            params![content, id],
         )
     }
 }
