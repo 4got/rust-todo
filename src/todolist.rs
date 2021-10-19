@@ -383,8 +383,7 @@ impl TodoList<Todo<String>> {
     pub fn move_to_in_db(id: usize, to: usize) -> Result<usize, rusqlite::Error> {
         let conn = TodoList::open_connection().unwrap();
         conn.execute(
-            "UPDATE todos SET sort = ?1 WHERE sort = ?2;
-            UPDATE todos SET sort = ?2 WHERE sort = ?1;",
+            "UPDATE todos SET sort = ?2 WHERE sort = ?1",
             params![id, to],
         )
     }

@@ -135,7 +135,7 @@ async fn home_post(form: web::Form<Request>) -> Result<HttpResponse> {
         }
         "move" => {
             let to = form.move_to.parse::<usize>().unwrap();
-            todo_list.move_to(index, to);
+            TodoList::move_to_in_db(index, to).unwrap();
         }
         "new" => {
             let content = form.new.to_string();
