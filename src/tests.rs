@@ -85,4 +85,15 @@ pub mod tests {
         todo_list_2.print();
         assert_eq!(prev_len - 2, todo_list.len());
     }
+    // #[ignore]
+    #[test]
+    fn get_last_sort_value() {
+        let last_value = TodoList::last_sort_value();
+        assert_eq!(10, last_value);
+    }
+    #[ignore]
+    #[test]
+    fn resort() {
+        TodoList::resort();
+    }
 }

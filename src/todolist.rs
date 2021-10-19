@@ -27,14 +27,17 @@ pub struct Todo<T> {
     pub id: usize,
     pub content: T,
     pub is_checked: bool,
+    pub sort: usize,
 }
 
 impl Todo<String> {
     pub fn new(content: String, is_checked: bool) -> Self {
+        let id = last_id();
         Self {
-            id: last_id(),
+            id,
             content,
             is_checked,
+            sort: TodoList::last_sort_value() + 1,
         }
     }
 
@@ -89,8 +92,6 @@ impl TodoList<Todo<String>> {
             .find(|&todo| todo.content == name)
             .unwrap()
     }
-
-    pub fn last_sort_value() {}
 
     pub fn from_file() -> Self {
         let file = TodoList::get_file();
@@ -303,13 +304,17 @@ impl TodoList<Todo<String>> {
         let conn = TodoList::open_connection().unwrap();
         let mut todo_list = TodoList { todos: vec![] };
         let mut stmt = conn
-            .prepare("SELECT id, content, is_checked from todos")
+            .prepare("SELECT id, content, is_checked, sort from todos")
             .unwrap();
         let todos = stmt.query_map([], |row| {
+            // let id = last_id();
             Ok(Todo {
+                // id,
                 id: row.get(0)?,
                 content: row.get(1)?,
                 is_checked: <bool>::from(row.get(2).unwrap()),
+                sort: row.get(3)?,
+                // sort: row.get(3)?,
             })
         });
         if let Ok(todos) = todos {
@@ -328,7 +333,7 @@ impl TodoList<Todo<String>> {
     pub fn add_to_db(todo: Todo<String>) -> Result<usize, rusqlite::Error> {
         let conn = TodoList::open_connection().unwrap();
         conn.execute(
-            "INSERT INTO todos (content, is_checked) values (?1, ?2)",
+            "INSERT INTO todos (content, is_checked, sort) values (?1, ?2, ?3)",
             params![
                 todo.content.to_string(),
                 if todo.is_checked {
@@ -336,6 +341,7 @@ impl TodoList<Todo<String>> {
                 } else {
                     0.to_string()
                 },
+                todo.sort
             ],
         )
     }
@@ -373,5 +379,34 @@ impl TodoList<Todo<String>> {
             "UPDATE todos SET content = ?1 WHERE id = ?2",
             params![content, id],
         )
+    }
+    pub fn move_to_in_db(id: usize, to: usize) -> Result<usize, rusqlite::Error> {
+        let conn = TodoList::open_connection().unwrap();
+        conn.execute(
+            "UPDATE todos SET sort = ?1 WHERE sort = ?2;
+            UPDATE todos SET sort = ?2 WHERE sort = ?1;",
+            params![id, to],
+        )
+    }
+    pub fn resort() {
+        let conn = TodoList::open_connection().unwrap();
+        let mut stmt = conn.prepare("SELECT id FROM todos").unwrap();
+        let mut query = stmt.query([]).unwrap();
+        while let Some(row) = query.next().expect("Next row error") {
+            let id: usize = row.get(0).expect("Field error");
+            conn.execute("UPDATE todos SET sort = ?1 WHERE id = ?2", params![id, id])
+                .unwrap();
+        }
+    }
+    pub fn last_sort_value() -> usize {
+        let conn = TodoList::open_connection().unwrap();
+        let mut stmt = conn
+            .prepare("SELECT sort FROM todos ORDER BY sort DESC LIMIT 1")
+            .unwrap();
+        let mut query = stmt.query([]).unwrap();
+        if let Some(row) = query.next().expect("Next row error") {
+            return row.get(0).expect("Field error");
+        }
+        return 0;
     }
 }

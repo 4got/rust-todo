@@ -18,7 +18,8 @@ struct HomeTemplate {
 }
 #[get("/")]
 async fn home() -> Result<HttpResponse> {
-    let todo_list = TodoList::from_db();
+    let mut todo_list = TodoList::from_db();
+    todo_list.todos.sort_by(|a, b| a.sort.cmp(&b.sort));
     let s = HomeTemplate { todo_list }.render().unwrap();
 
     Ok(HttpResponse::Ok().content_type("text/html").body(s))
@@ -73,7 +74,7 @@ async fn home_post_file(form: web::Form<Request>) -> Result<HttpResponse> {
         }
         "move" => {
             let to = form.move_to.parse::<usize>().unwrap();
-            todo_list.move_to(index, to);
+            TodoList::move_to_in_db(index, to).unwrap();
         }
         "new" => {
             let content = form.new.to_string();
@@ -117,6 +118,7 @@ async fn home_post(form: web::Form<Request>) -> Result<HttpResponse> {
             TodoList::delete_in_db(index).unwrap();
         }
         "save" => {
+            // todo_list.save_to_db().unwrap();
             let to_update: Vec<(usize, String)> = form
                 .update
                 .to_string()
@@ -129,7 +131,6 @@ async fn home_post(form: web::Form<Request>) -> Result<HttpResponse> {
                 .collect();
             for (index, content) in to_update {
                 TodoList::update_in_db(index, content).unwrap();
-                // todo_list.todos[index].content = content;
             }
         }
         "move" => {
