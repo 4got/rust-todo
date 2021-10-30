@@ -85,7 +85,12 @@ pub mod tests {
         todo_list_2.print();
         assert_eq!(prev_len - 2, todo_list.len());
     }
-    // #[ignore]
+    #[ignore]
+    #[test]
+    fn resort() {
+        TodoList::resort();
+    }
+    #[ignore]
     #[test]
     fn get_last_sort_value() {
         let last_value = TodoList::last_sort_value();
@@ -93,7 +98,37 @@ pub mod tests {
     }
     #[ignore]
     #[test]
-    fn resort() {
+    fn get_sort_todo_by_id() {
         TodoList::resort();
+        use rusqlite::params;
+        let conn = TodoList::open_connection().unwrap();
+        // get moved sort
+        let sort: usize;
+        let mut stmt = conn.prepare("SELECT sort FROM todos WHERE id = ?").unwrap();
+        let mut query = stmt.query(params![7]).unwrap();
+        if let Some(row) = query.next().unwrap() {
+            sort = row.get(0).unwrap();
+        } else {
+            panic!("Select failed");
+        }
+        assert_eq!(1, sort);
+        // get destination id
+        let dest_id: usize;
+        let mut stmt = conn.prepare("SELECT id FROM todos WHERE sort = ?").unwrap();
+        let mut query = stmt.query(params![sort + 1]).unwrap();
+        if let Some(row) = query.next().unwrap() {
+            dest_id = row.get(0).unwrap();
+        } else {
+            panic!("Select 2 failed");
+        }
+        assert_eq!(1, dest_id);
+    }
+
+    #[test]
+    fn repare_content_to_non_unique() {
+        let todo_list = TodoList::from_db();
+        let conn = TodoList::open_connection().unwrap();
+        conn.execute("DROP TABLE todos", []).unwrap();
+        todo_list.save_to_db().unwrap();
     }
 }

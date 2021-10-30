@@ -123,7 +123,7 @@ impl TodoList<Todo<String>> {
         self.todos.push(todo);
         Ok(())
     }
-
+    #[allow(dead_code)]
     pub fn move_to(&mut self, from: usize, to: usize) {
         let todo = self.todos.remove(from);
         self.todos.insert(to, todo);
@@ -291,7 +291,7 @@ impl TodoList<Todo<String>> {
         conn.execute(
             "CREATE table if not exists todos (
                 id integer primary key,
-                content text not null unique,
+                content text not null,
                 is_checked TINYINT(1) not null,
                 sort integer not null default 0
             )",
@@ -380,21 +380,54 @@ impl TodoList<Todo<String>> {
             params![content, id],
         )
     }
-    pub fn move_to_in_db(id: usize, to: usize) -> Result<usize, rusqlite::Error> {
+    pub fn move_to_in_db(id: usize, to: i32) -> Result<usize, rusqlite::Error> {
         let conn = TodoList::open_connection().unwrap();
-        conn.execute(
-            "UPDATE todos SET sort = ?2 WHERE sort = ?1",
-            params![id, to],
-        )
+        // get moved sort
+        let mut sort: i32 = 0;
+        let mut stmt = conn.prepare("SELECT sort FROM todos WHERE id = ?")?;
+        if let Some(row) = stmt.query(params![id])?.next()? {
+            sort = row.get(0)?;
+        }
+        // resort on destination absence
+        let mut stmt = conn.prepare("SELECT id FROM todos WHERE sort = ?")?;
+        if let None = stmt.query(params![sort + to])?.next()? {
+            TodoList::resort();
+        }
+        // get moved sort
+        let mut sort: i32 = 1;
+        let mut stmt = conn.prepare("SELECT sort FROM todos WHERE id = ?")?;
+        if let Some(row) = stmt.query(params![id])?.next()? {
+            sort = row.get(0)?;
+        }
+        // get destination id
+        let mut dest_id: usize = id;
+        let mut stmt = conn.prepare("SELECT id FROM todos WHERE sort = ?")?;
+        if let Some(row) = stmt.query(params![sort + to])?.next()? {
+            dest_id = row.get(0)?;
+        }
+        // change sorts
+        let mut stmt = conn
+            .prepare("UPDATE todos SET sort = ?1 WHERE id = ?2")
+            .unwrap();
+        stmt.execute(params![sort + to, id]).unwrap();
+        stmt.execute(params![sort, dest_id])
     }
+    // pub fn row_field(conn: rusqlite::Connection) -> Result<Option<Row>> {}
     pub fn resort() {
         let conn = TodoList::open_connection().unwrap();
-        let mut stmt = conn.prepare("SELECT id FROM todos").unwrap();
+        let mut stmt = conn
+            .prepare("SELECT id FROM todos ORDER BY sort ASC")
+            .unwrap();
         let mut query = stmt.query([]).unwrap();
+        let mut sort: usize = 1;
         while let Some(row) = query.next().expect("Next row error") {
             let id: usize = row.get(0).expect("Field error");
-            conn.execute("UPDATE todos SET sort = ?1 WHERE id = ?2", params![id, id])
-                .unwrap();
+            conn.execute(
+                "UPDATE todos SET sort = ?1 WHERE id = ?2",
+                params![sort, id],
+            )
+            .unwrap();
+            sort += 1;
         }
     }
     pub fn last_sort_value() -> usize {
