@@ -123,16 +123,16 @@ async fn main() -> std::io::Result<()> {
             let todo_list = TodoList::from_db();
             todo_list.print();
         }
-        "file" => loop {
-            let file = TodoList::get_file();
-            if let Ok(then) = TodoList::serve(Some(file)) {
-                if then.as_str() == "Exit" {
-                    break;
-                }
-            }
-        },
+        // "file" => loop {
+        //     let file = TodoList::get_file();
+        //     if let Ok(then) = TodoList::serve(Some(file)) {
+        //         if then.as_str() == "Exit" {
+        //             break;
+        //         }
+        //     }
+        // },
         _ => loop {
-            if let Ok(then) = TodoList::serve(None) {
+            if let Ok(then) = TodoList::serve() {
                 if then.as_str() == "Exit" {
                     break;
                 }

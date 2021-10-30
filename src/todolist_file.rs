@@ -1,5 +1,6 @@
 use ansi_term::Colour::RGB;
 use std::fs::File;
+// use std::fs::OpenOptions;
 use std::io::{self, prelude::*, BufReader};
 
 use global_counter::primitive::exact::CounterUsize;
@@ -11,6 +12,7 @@ pub fn get_input() -> std::io::Result<String> {
     Ok(input.trim().to_string())
 }
 
+// const TODOLIST_PATH: &str = "list.txt";
 static LAST_ID: CounterUsize = CounterUsize::new(0);
 pub fn last_id() -> usize {
     LAST_ID.inc();
@@ -38,6 +40,27 @@ impl Todo<String> {
             sort: TodoList::last_sort_value() + 1,
         }
     }
+
+    // pub fn from_line(line: String) -> std::io::Result<Self> {
+    //     let (content, is_checked_string) = line.split_once("##").unwrap();
+    //     let mut is_checked = false;
+    //     if is_checked_string.trim() == "true" {
+    //         is_checked = true
+    //     }
+    //     Ok(Self::new(content.to_string(), is_checked))
+    // }
+
+    // pub fn as_line(&self) -> String {
+    //     let is_checked_string = if self.is_checked { "true" } else { "false" };
+    //     self.content.to_string() + "##" + is_checked_string
+    // }
+
+    // pub fn check(&mut self) {
+    //     self.is_checked = true;
+    // }
+    // pub fn uncheck(&mut self) {
+    //     self.is_checked = false;
+    // }
 }
 
 impl TodoList<Todo<String>> {
@@ -69,6 +92,11 @@ impl TodoList<Todo<String>> {
             .find(|&todo| todo.content == name)
             .unwrap()
     }
+    // #[allow(dead_code)]
+    // pub fn from_file() -> Self {
+    //     let file = TodoList::get_file();
+    //     Self::new(&file)
+    // }
 
     pub fn has_item(&self, n: usize) -> bool {
         if n == 0 || self.todos.len() < n {
@@ -95,6 +123,29 @@ impl TodoList<Todo<String>> {
         self.todos.push(todo);
         Ok(())
     }
+    // #[allow(dead_code)]
+    // pub fn move_to(&mut self, from: usize, to: usize) {
+    //     let todo = self.todos.remove(from);
+    //     self.todos.insert(to, todo);
+    // }
+
+    // pub fn save(self) -> std::io::Result<()> {
+    //     let mut file = OpenOptions::new()
+    //         .write(true)
+    //         .create(true)
+    //         .open(&String::from(TODOLIST_PATH))
+    //         .unwrap();
+    //     file.set_len(0)?;
+    //     file.write_all(
+    //         self.todos
+    //             .iter()
+    //             .map(|t| t.as_line())
+    //             .collect::<Vec<String>>()
+    //             .join("\r\n")
+    //             .as_bytes(),
+    //     )?;
+    //     Ok(())
+    // }
 
     pub fn print(&self) -> () {
         println!("\r\n{}\r\n", RGB(127, 255, 127).paint("Todo List"));
@@ -126,8 +177,15 @@ impl TodoList<Todo<String>> {
         println!("restart: {}", RGB(166, 166, 166).paint("restart todo"));
         println!("exit: {}", RGB(166, 166, 166).paint("exit"));
     }
-    pub fn serve() -> std::io::Result<String> {
+    pub fn serve(/* file: Option<File> */) -> std::io::Result<String> {
         let mut todo_list = TodoList::from_db();
+        // let mut is_file = false;
+        // if let Some(ref file) = file {
+        //     todo_list = TodoList::new(&file);
+        //     is_file = true;
+        // } else {
+        //     todo_list = TodoList::from_db();
+        // }
         todo_list.print();
 
         // interface
@@ -138,6 +196,11 @@ impl TodoList<Todo<String>> {
         match command.as_str() {
             "clear" => {
                 TodoList::clear_db().unwrap();
+                // if is_file {
+                //     file.unwrap().set_len(0)?;
+                // } else {
+                //     TodoList::clear_db().unwrap();
+                // }
                 println!("\r\nClear was successfull, closing\r\n");
             }
             "remove" => {
@@ -148,6 +211,11 @@ impl TodoList<Todo<String>> {
                     todo_list.remove(remove_number - 1);
                     todo_list.print();
                     todo_list.save_to_db().unwrap();
+                    // if is_file {
+                    //     todo_list.save()?;
+                    // } else {
+                    //     todo_list.save_to_db().unwrap();
+                    // }
                 } else {
                     println!("Wrong number = {:?}", remove_number);
                 }
@@ -156,6 +224,12 @@ impl TodoList<Todo<String>> {
                 println!("\r\nWant to add something?");
                 let todo: String = get_input()?;
                 TodoList::add_to_db(Todo::new(todo, false)).unwrap();
+                // if is_file {
+                //     todo_list.add(Todo::new(todo, false))?;
+                //     todo_list.save()?;
+                // } else {
+                //     TodoList::add_to_db(Todo::new(todo, false)).unwrap();
+                // }
             }
             "complete" => {
                 println!("Press number of todo: ");
@@ -163,6 +237,13 @@ impl TodoList<Todo<String>> {
                 if todo_list.has_item(check_number) {
                     let ref todo = todo_list.todos[check_number - 1];
                     TodoList::complete_in_db(todo.id).unwrap();
+                    // if is_file {
+                    //     todo_list.todos[check_number - 1].check();
+                    //     todo_list.save()?;
+                    // } else {
+                    //     let ref todo = todo_list.todos[check_number - 1];
+                    //     TodoList::complete_in_db(todo.id).unwrap();
+                    // }
                 } else {
                     println!("Wrong number = {:?}", check_number);
                 }
@@ -173,6 +254,13 @@ impl TodoList<Todo<String>> {
                 if todo_list.has_item(uncheck_number) {
                     let ref todo = todo_list.todos[uncheck_number - 1];
                     TodoList::uncomplete_in_db(todo.id).unwrap();
+                    // if is_file {
+                    //     todo_list.todos[uncheck_number - 1].uncheck();
+                    //     todo_list.save()?;
+                    // } else {
+                    //     let ref todo = todo_list.todos[uncheck_number - 1];
+                    //     TodoList::uncomplete_in_db(todo.id).unwrap();
+                    // }
                 } else {
                     println!("Wrong number = {:?}", uncheck_number);
                 }
@@ -185,6 +273,15 @@ impl TodoList<Todo<String>> {
         }
         Ok(String::from("Continue"))
     }
+
+    // pub fn get_file() -> File {
+    //     OpenOptions::new()
+    //         .read(true)
+    //         .write(true)
+    //         .create(true)
+    //         .open(&String::from(TODOLIST_PATH))
+    //         .unwrap()
+    // }
 
     #[allow(dead_code)]
     pub fn print_from_file(file: &File) {
