@@ -3,26 +3,27 @@ pub mod tests {
     // use super::*;
     use crate::Todo;
     use crate::TodoList;
-    #[test]
-    #[ignore]
-    fn new_todo_list() {
-        let file = TodoList::get_file();
-        let todo_list = TodoList::new(&file);
-    }
-    #[test]
-    #[ignore]
-    fn get_first_todo() {
-        let todo_list = TodoList::from_file();
-        let item = todo_list.get(0);
-        assert_eq!(item.content.to_string(), "Love Maria");
-    }
-    #[test]
-    #[ignore]
-    fn cover_with_tests_is_unchecked() {
-        let todo_list = TodoList::from_file();
-        let item = todo_list.get_by_name("Cover with tests".to_string());
-        assert_eq!(item.is_checked, false);
-    }
+    use crate::TodoMarker;
+    // #[test]
+    // #[ignore]
+    // fn new_todo_list() {
+    //     let file = TodoList::get_file();
+    //     let todo_list = TodoList::new(&file);
+    // }
+    // #[test]
+    // #[ignore]
+    // fn get_first_todo() {
+    //     let todo_list = TodoList::from_file();
+    //     let item = todo_list.get(0);
+    //     assert_eq!(item.content.to_string(), "Love Maria");
+    // }
+    // #[test]
+    // #[ignore]
+    // fn cover_with_tests_is_unchecked() {
+    //     let todo_list = TodoList::from_file();
+    //     let item = todo_list.get_by_name("Cover with tests".to_string());
+    //     assert_eq!(item.is_checked, false);
+    // }
     #[ignore]
     #[test]
     fn insert_todo_to_db() {
@@ -31,15 +32,15 @@ pub mod tests {
         todo_list.print();
         assert_eq!(11, todo_list.todos.len());
     }
-    #[ignore]
-    #[test]
-    fn migrate_from_files_to_db() {
-        TodoList::clear_db().unwrap();
-        let todo_list_from_file = TodoList::from_file();
-        todo_list_from_file.print();
+    // #[ignore]
+    // #[test]
+    // fn migrate_from_files_to_db() {
+    //     TodoList::clear_db().unwrap();
+    //     let todo_list_from_file = TodoList::from_file();
+    //     todo_list_from_file.print();
 
-        assert_eq!(10, todo_list_from_file.save_to_db().unwrap());
-    }
+    //     assert_eq!(10, todo_list_from_file.save_to_db().unwrap());
+    // }
     #[ignore]
     #[test]
     fn show_todolist() {
@@ -123,12 +124,24 @@ pub mod tests {
         }
         assert_eq!(1, dest_id);
     }
-
+    #[ignore]
     #[test]
-    fn repare_content_to_non_unique() {
+    fn recreate_table_todos() {
         let todo_list = TodoList::from_db();
         let conn = TodoList::open_connection().unwrap();
         conn.execute("DROP TABLE todos", []).unwrap();
         todo_list.save_to_db().unwrap();
+    }
+    // #[ignore]
+    #[test]
+    fn make_first_todo_questionable() {
+        TodoList::marker_as(1, TodoMarker::Questionable).unwrap();
+        let todo_list = TodoList::from_db();
+        let marker = match todo_list.todos[0].marker {
+            TodoMarker::Important => 1,
+            TodoMarker::Questionable => 2,
+            TodoMarker::Default => 0,
+        };
+        assert_eq!(marker, 2);
     }
 }

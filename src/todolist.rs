@@ -26,6 +26,13 @@ pub struct Todo<T> {
     pub content: T,
     pub is_checked: bool,
     pub sort: usize,
+    pub marker: TodoMarker,
+}
+
+pub enum TodoMarker {
+    Default,
+    Important,
+    Questionable,
 }
 
 impl Todo<String> {
@@ -36,6 +43,7 @@ impl Todo<String> {
             content,
             is_checked,
             sort: TodoList::last_sort_value() + 1,
+            marker: TodoMarker::Default,
         }
     }
 }
@@ -203,7 +211,8 @@ impl TodoList<Todo<String>> {
                 id integer primary key,
                 content text not null,
                 is_checked TINYINT(1) not null,
-                sort integer not null default 0
+                sort integer not null default 0,
+                marker TINYINT(1) not null default 0
             )",
             params![],
         )?;
@@ -214,7 +223,7 @@ impl TodoList<Todo<String>> {
         let conn = TodoList::open_connection().unwrap();
         let mut todo_list = TodoList { todos: vec![] };
         let mut stmt = conn
-            .prepare("SELECT id, content, is_checked, sort from todos")
+            .prepare("SELECT id, content, is_checked, sort, marker from todos")
             .unwrap();
         let todos = stmt.query_map([], |row| {
             // let id = last_id();
@@ -224,6 +233,12 @@ impl TodoList<Todo<String>> {
                 content: row.get(1)?,
                 is_checked: <bool>::from(row.get(2).unwrap()),
                 sort: row.get(3)?,
+                // marker: TodoMarker::Default,
+                marker: match (row.get(4) as Result<i8>).unwrap() {
+                    1 => TodoMarker::Important,
+                    2 => TodoMarker::Questionable,
+                    _ => TodoMarker::Default,
+                },
                 // sort: row.get(3)?,
             })
         });
@@ -288,6 +303,18 @@ impl TodoList<Todo<String>> {
         conn.execute(
             "UPDATE todos SET content = ?1 WHERE id = ?2",
             params![content, id],
+        )
+    }
+    pub fn marker_as(id: usize, marker: TodoMarker) -> Result<usize, rusqlite::Error> {
+        let conn = TodoList::open_connection().unwrap();
+        let marker = match marker {
+            TodoMarker::Important => 1,
+            TodoMarker::Questionable => 2,
+            TodoMarker::Default => 0,
+        };
+        conn.execute(
+            "UPDATE todos SET marker = ?1 WHERE id = ?2",
+            params![marker, id],
         )
     }
     pub fn move_to_in_db(id: usize, to: i32) -> Result<usize, rusqlite::Error> {
