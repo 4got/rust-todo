@@ -6,6 +6,8 @@
   --neutral: #88a;
   --text: #447;
   --accent: #22a;
+  --important: #f1c40f;
+  --warn: #e67e22;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: var(--text);
 }
@@ -42,6 +44,7 @@
   padding: 0.5rem 0.5rem;
   font-size: 1rem;
   color: var(--text);
+  background-color: transparent;
   font-family: inherit;
   border: 1px solid var(--border);
   display: inline-flex;
@@ -49,6 +52,15 @@
 }
 .input:focus {
   background-color: var(--paper) !important;
+}
+.select-absolute {
+  position: absolute;
+  display: flex;
+  top: -2px;
+  left: -2px;
+  background-color: var(--paper);
+  border: 2px solid var(--border);
+  border-radius: 18px;
 }
 
 /* list */
@@ -74,14 +86,23 @@
   border: transparent;
 }
 .list-item.is-checked {
-  background-color: var(--selected);
+  background: var(--selected);
 }
 .list-item.is-checked .input {
-  background-color: transparent;
+  background: transparent;
+}
+.list-item.is-important {
+  background-image: radial-gradient(
+    circle,
+    rgba(241, 196, 15, 0.5) 0%,
+    rgba(241, 196, 15, 1) 48%,
+    transparent 100%
+  );
 }
 .list-marker {
   text-align: right;
-  width: 18px;
+  width: 32px;
+  position: relative;
 }
 
 .contains-gui {
@@ -136,4 +157,12 @@
 .set > * {
   margin-right: 0.4rem;
   margin-bottom: 0.4rem;
+}
+
+/* colors */
+.color-important {
+  color: var(--important);
+}
+.color-warn {
+  color: var(--warn);
 }

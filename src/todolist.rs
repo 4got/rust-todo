@@ -17,8 +17,19 @@ pub fn last_id() -> usize {
     LAST_ID.get()
 }
 
-pub struct TodoList<T> {
-    pub todos: Vec<T>,
+pub enum TodoMarker {
+    Default,
+    Important,
+    Questionable,
+}
+impl TodoMarker {
+    pub fn from_usize(marker_id: usize) -> Self {
+        match marker_id {
+            1 => TodoMarker::Important,
+            2 => TodoMarker::Questionable,
+            _ => TodoMarker::Default,
+        }
+    }
 }
 
 pub struct Todo<T> {
@@ -28,13 +39,6 @@ pub struct Todo<T> {
     pub sort: usize,
     pub marker: TodoMarker,
 }
-
-pub enum TodoMarker {
-    Default,
-    Important,
-    Questionable,
-}
-
 impl Todo<String> {
     pub fn new(content: String, is_checked: bool) -> Self {
         let id = last_id();
@@ -46,8 +50,23 @@ impl Todo<String> {
             marker: TodoMarker::Default,
         }
     }
+    pub fn is_questionable(&self) -> bool {
+        match self.marker {
+            TodoMarker::Questionable => true,
+            _ => false,
+        }
+    }
+    pub fn is_important(&self) -> bool {
+        match self.marker {
+            TodoMarker::Important => true,
+            _ => false,
+        }
+    }
 }
 
+pub struct TodoList<T> {
+    pub todos: Vec<T>,
+}
 impl TodoList<Todo<String>> {
     // pub fn new(file: &File) -> Self {
     //     let mut todos = Vec::new();
@@ -226,20 +245,12 @@ impl TodoList<Todo<String>> {
             .prepare("SELECT id, content, is_checked, sort, marker from todos")
             .unwrap();
         let todos = stmt.query_map([], |row| {
-            // let id = last_id();
             Ok(Todo {
-                // id,
                 id: row.get(0)?,
                 content: row.get(1)?,
                 is_checked: <bool>::from(row.get(2).unwrap()),
                 sort: row.get(3)?,
-                // marker: TodoMarker::Default,
-                marker: match (row.get(4) as Result<i8>).unwrap() {
-                    1 => TodoMarker::Important,
-                    2 => TodoMarker::Questionable,
-                    _ => TodoMarker::Default,
-                },
-                // sort: row.get(3)?,
+                marker: TodoMarker::from_usize(row.get(4).unwrap()),
             })
         });
         if let Ok(todos) = todos {
@@ -305,7 +316,7 @@ impl TodoList<Todo<String>> {
             params![content, id],
         )
     }
-    pub fn marker_as(id: usize, marker: TodoMarker) -> Result<usize, rusqlite::Error> {
+    pub fn mark_as(id: usize, marker: TodoMarker) -> Result<usize, rusqlite::Error> {
         let conn = TodoList::open_connection().unwrap();
         let marker = match marker {
             TodoMarker::Important => 1,

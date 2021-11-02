@@ -17,6 +17,7 @@
       <input type="hidden" name="action" />
       <input type="hidden" name="index" />
       <input type="hidden" name="update" />
+      <input type="hidden" name="mark_as" />
       <input type="hidden" name="move_to" />
 
       <main class="page-main">
@@ -45,12 +46,73 @@
             </div>
             <div class="list">
               {% for todo in todo_list.todos %}
+              <!-- prettier-ignore-attribute -->
               <div
-                class="list-item {% if todo.is_checked %}is-checked{% endif %}"
+                class="list-item
+                {% if todo.is_checked %}is-checked{% endif %}
+                {% if todo.is_important() %}is-important{% endif %}"
               >
                 <div class="contains-gui">
                   <div class="list-marker">
-                    {{- loop.index0 + 1 }}
+                    {% if todo.is_questionable() %}
+                    <button
+                      class="button-icon color-warn"
+                      type="button"
+                      onclick="useSelect('{{ todo.id }}')"
+                    >
+                      <i class="far fa-question-circle"></i>
+                    </button>
+                    {% else if todo.is_important() %}
+                    <button
+                      class="button-icon color-important"
+                      type="button"
+                      onclick="useSelect('{{ todo.id }}')"
+                    >
+                      <i class="far fa-exclamation-circle"></i>
+                    </button>
+                    {% else %}<button
+                      class="button-icon gui-hidden"
+                      type="button"
+                      onclick="useSelect('{{ todo.id }}')"
+                    >
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    {% endif %}
+
+                    <div
+                      data-select="{{ todo.id }}"
+                      style="display: none"
+                      class="select-absolute"
+                    >
+                      <button
+                        class="button-icon"
+                        onclick="closeSelect('{{ todo.id }}')"
+                        type="button"
+                      >
+                        <i class="fas fa-times"></i>
+                      </button>
+                      <button
+                        class="button-icon"
+                        onclick="markAs('{{ todo.id }}', 2)"
+                        type="button"
+                      >
+                        <i class="far fa-question-circle"></i>
+                      </button>
+                      <button
+                        class="button-icon"
+                        onclick="markAs('{{ todo.id }}', 1)"
+                        type="button"
+                      >
+                        <i class="far fa-exclamation-circle"></i>
+                      </button>
+                      <button
+                        class="button-icon"
+                        onclick="markAs('{{ todo.id }}', 0)"
+                        type="button"
+                      >
+                        <i class="far fa-circle"></i>
+                      </button>
+                    </div>
                     <!-- {{ todo.id }} {{ todo.sort }} -->
                   </div>
                   <div class="df f-1 ml-1 ai-center">
@@ -159,6 +221,32 @@
       const remove = (index) => {
         input("index").value = index;
         submitAction("remove");
+      };
+      const closeSelect = (index) => {
+        // const btn = window.event.target;
+        const select = document.querySelector(`[data-select="${index}"]`);
+        select.style.display = "none";
+      };
+      const useSelect = (index) => {
+        // const btn = window.event.target;
+        const select = document.querySelector(`[data-select="${index}"]`);
+        select.style.display = "";
+
+        const closeWhenNotSelect = () => {
+          if (select !== event.target && !select.contains(event.target)) {
+            closeSelect(index);
+            removeEventListener("click", closeWhenNotSelect);
+          }
+        };
+
+        // setTimeout(() => addEventListener("click", closeWhenNotSelect), 0);
+        addEventListener("click", closeWhenNotSelect);
+        window.event.stopPropagation();
+      };
+      const markAs = (index, mark) => {
+        input("mark_as").value = mark;
+        input("index").value = index;
+        submitAction("mark_as");
       };
       const rewrite = (index) => {
         saveButton.style.display = "";

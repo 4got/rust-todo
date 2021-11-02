@@ -135,7 +135,7 @@ pub mod tests {
     // #[ignore]
     #[test]
     fn make_first_todo_questionable() {
-        TodoList::marker_as(1, TodoMarker::Questionable).unwrap();
+        TodoList::mark_as(1, TodoMarker::Questionable).unwrap();
         let todo_list = TodoList::from_db();
         let marker = match todo_list.todos[0].marker {
             TodoMarker::Important => 1,

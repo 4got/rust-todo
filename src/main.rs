@@ -32,6 +32,7 @@ struct Request {
     action: String,
     update: String,
     move_to: String,
+    mark_as: String,
 }
 
 #[post("/")]
@@ -81,6 +82,11 @@ async fn home_post(form: web::Form<Request>) -> Result<HttpResponse> {
         "move" => {
             let to = form.move_to.parse::<i32>().unwrap();
             TodoList::move_to_in_db(index, to).unwrap();
+        }
+        "mark_as" => {
+            let marker_id = form.mark_as.parse::<usize>().unwrap();
+            let marker = TodoMarker::from_usize(marker_id);
+            TodoList::mark_as(index, marker).unwrap();
         }
         "new" => {
             let content = form.new.to_string();
