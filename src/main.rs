@@ -91,7 +91,7 @@ async fn home_post(form: web::Form<Request>) -> Result<HttpResponse> {
         "new" => {
             let content = form.new.to_string();
             if content.len() > 0 {
-                TodoList::add_to_db(Todo::new(content, false)).unwrap();
+                TodoList::add_to_db(Todo::new(content, false), 1).unwrap();
             }
         }
         _ => (),

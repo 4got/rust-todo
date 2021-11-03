@@ -174,7 +174,7 @@ impl TodoList<Todo<String>> {
                 if todo_list.has_item(remove_number - 1) {
                     todo_list.remove(remove_number - 1);
                     todo_list.print();
-                    todo_list.save_to_db().unwrap();
+                    todo_list.save_to_db(1).unwrap();
                 } else {
                     println!("Wrong number = {:?}", remove_number);
                 }
@@ -182,7 +182,7 @@ impl TodoList<Todo<String>> {
             "add" => {
                 println!("\r\nWant to add something?");
                 let todo: String = get_input()?;
-                TodoList::add_to_db(Todo::new(todo, false)).unwrap();
+                TodoList::add_to_db(Todo::new(todo, false), 1).unwrap();
             }
             "complete" => {
                 println!("Press number of todo: ");
@@ -235,6 +235,16 @@ impl TodoList<Todo<String>> {
             )",
             params![],
         )?;
+        conn.execute(
+            "CREATE table if not exists todos_1 (
+                id integer primary key,
+                content text not null,
+                is_checked TINYINT(1) not null,
+                sort integer not null default 0,
+                marker TINYINT(1) not null default 0
+            )",
+            params![],
+        )?;
 
         Ok(conn)
     }
@@ -266,10 +276,14 @@ impl TodoList<Todo<String>> {
         let conn = TodoList::open_connection().unwrap();
         conn.execute("DELETE from todos WHERE id = ?", params![id])
     }
-    pub fn add_to_db(todo: Todo<String>) -> Result<usize, rusqlite::Error> {
+    pub fn add_to_db(todo: Todo<String>, index: usize) -> Result<usize, rusqlite::Error> {
         let conn = TodoList::open_connection().unwrap();
         conn.execute(
-            "INSERT INTO todos (content, is_checked, sort) values (?1, ?2, ?3)",
+            format!(
+                "INSERT INTO todos_{} (content, is_checked, sort) values (?1, ?2, ?3)",
+                index
+            )
+            .as_str(),
             params![
                 todo.content.to_string(),
                 if todo.is_checked {
@@ -285,11 +299,11 @@ impl TodoList<Todo<String>> {
         let conn = TodoList::open_connection()?;
         conn.execute("DELETE from todos", [])
     }
-    pub fn save_to_db(self) -> Result<usize, rusqlite::Error> {
+    pub fn save_to_db(self, index: usize) -> Result<usize, rusqlite::Error> {
         TodoList::clear_db().unwrap();
         let mut result = 0;
         for todo in self.todos {
-            if let Ok(index) = TodoList::add_to_db(todo) {
+            if let Ok(index) = TodoList::add_to_db(todo, index) {
                 result += index;
             }
         }
