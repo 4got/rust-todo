@@ -1,0 +1,11 @@
+{
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "driver": "SQLite",
+      "database": "${workspaceFolder:rust-todo}/todos.db",
+      "name": "1"
+    }
+  ],
+  "sqltools.useNodeRuntime": true
+}

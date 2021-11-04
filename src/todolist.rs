@@ -64,21 +64,19 @@ impl Todo<String> {
     }
 }
 
+pub struct List {
+    id: usize,
+    name: String,
+}
 pub struct TodoList<T> {
     pub todos: Vec<T>,
+    pub lists: Vec<List>,
 }
 impl TodoList<Todo<String>> {
-    // pub fn new(file: &File) -> Self {
-    //     let mut todos = Vec::new();
-    //     let reader = BufReader::new(file);
-    //     for line in reader.lines() {
-    //         let todo = line.unwrap();
-    //         if todo.len() > 0 {
-    //             todos.push(Todo::from_line(todo).unwrap());
-    //         }
-    //     }
-    //     Self { todos }
-    // }
+    #[allow(dead_code)]
+    pub fn new(todos: Vec<Todo<String>>, lists: Vec<List>) -> Self {
+        Self { todos, lists }
+    }
     #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.todos.len()
@@ -174,7 +172,7 @@ impl TodoList<Todo<String>> {
                 if todo_list.has_item(remove_number - 1) {
                     todo_list.remove(remove_number - 1);
                     todo_list.print();
-                    todo_list.save_to_db(1).unwrap();
+                    todo_list.save_to_db().unwrap();
                 } else {
                     println!("Wrong number = {:?}", remove_number);
                 }
@@ -182,7 +180,7 @@ impl TodoList<Todo<String>> {
             "add" => {
                 println!("\r\nWant to add something?");
                 let todo: String = get_input()?;
-                TodoList::add_to_db(Todo::new(todo, false), 1).unwrap();
+                TodoList::add_to_db(Todo::new(todo, false)).unwrap();
             }
             "complete" => {
                 println!("Press number of todo: ");
@@ -226,64 +224,75 @@ impl TodoList<Todo<String>> {
         let conn = Connection::open("todos.db")?;
 
         conn.execute(
+            "CREATE table if not exists todolists (
+                id integer primary key,
+                name text not null default 'Todolist'
+            )",
+            params![],
+        )?;
+
+        conn.execute(
             "CREATE table if not exists todos (
                 id integer primary key,
                 content text not null,
                 is_checked TINYINT(1) not null,
                 sort integer not null default 0,
-                marker TINYINT(1) not null default 0
-            )",
-            params![],
-        )?;
-        conn.execute(
-            "CREATE table if not exists todos_1 (
-                id integer primary key,
-                content text not null,
-                is_checked TINYINT(1) not null,
-                sort integer not null default 0,
-                marker TINYINT(1) not null default 0
+                marker TINYINT(1) not null default 0,
+                list_id integer not null default 1
             )",
             params![],
         )?;
 
         Ok(conn)
     }
+    pub fn create() -> Result<usize, rusqlite::Error> {
+        let conn = TodoList::open_connection().unwrap();
+        conn.execute(
+            "INSERT INTO todolists (name) values ('Todolist')",
+            params![],
+        )
+    }
     pub fn from_db() -> Self {
         let conn = TodoList::open_connection().unwrap();
-        let mut todo_list = TodoList { todos: vec![] };
         let mut stmt = conn
             .prepare("SELECT id, content, is_checked, sort, marker from todos")
             .unwrap();
-        let todos = stmt.query_map([], |row| {
-            Ok(Todo {
-                id: row.get(0)?,
-                content: row.get(1)?,
-                is_checked: <bool>::from(row.get(2).unwrap()),
-                sort: row.get(3)?,
-                marker: TodoMarker::from_usize(row.get(4).unwrap()),
+        let todos: Vec<Todo<String>> = stmt
+            .query_map([], |row| {
+                Ok(Todo {
+                    id: row.get(0)?,
+                    content: row.get(1)?,
+                    is_checked: <bool>::from(row.get(2).unwrap()),
+                    sort: row.get(3)?,
+                    marker: TodoMarker::from_usize(row.get(4).unwrap()),
+                })
             })
-        });
-        if let Ok(todos) = todos {
-            for todo in todos {
-                if let Ok(todo) = todo {
-                    todo_list.todos.push(todo);
-                }
-            }
-        }
-        todo_list
+            .unwrap()
+            .into_iter()
+            .map(|t| t.unwrap())
+            .collect();
+        let mut stmt = conn.prepare("SELECT id, name from todolists").unwrap();
+        let lists: Vec<List> = stmt
+            .query_map([], |row| {
+                Ok(List {
+                    id: row.get(0)?,
+                    name: row.get(1)?,
+                })
+            })
+            .unwrap()
+            .into_iter()
+            .map(|t| t.unwrap())
+            .collect();
+        TodoList::new(todos, lists)
     }
     pub fn delete_in_db(id: usize) -> Result<usize, rusqlite::Error> {
         let conn = TodoList::open_connection().unwrap();
         conn.execute("DELETE from todos WHERE id = ?", params![id])
     }
-    pub fn add_to_db(todo: Todo<String>, index: usize) -> Result<usize, rusqlite::Error> {
+    pub fn add_to_db(todo: Todo<String>) -> Result<usize, rusqlite::Error> {
         let conn = TodoList::open_connection().unwrap();
         conn.execute(
-            format!(
-                "INSERT INTO todos_{} (content, is_checked, sort) values (?1, ?2, ?3)",
-                index
-            )
-            .as_str(),
+            "INSERT INTO todos (content, is_checked, sort) values (?1, ?2, ?3)",
             params![
                 todo.content.to_string(),
                 if todo.is_checked {
@@ -299,11 +308,11 @@ impl TodoList<Todo<String>> {
         let conn = TodoList::open_connection()?;
         conn.execute("DELETE from todos", [])
     }
-    pub fn save_to_db(self, index: usize) -> Result<usize, rusqlite::Error> {
+    pub fn save_to_db(self) -> Result<usize, rusqlite::Error> {
         TodoList::clear_db().unwrap();
         let mut result = 0;
         for todo in self.todos {
-            if let Ok(index) = TodoList::add_to_db(todo, index) {
+            if let Ok(index) = TodoList::add_to_db(todo) {
                 result += index;
             }
         }

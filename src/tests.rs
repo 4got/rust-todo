@@ -132,7 +132,13 @@ pub mod tests {
         conn.execute("DROP TABLE todos", []).unwrap();
         todo_list.save_to_db().unwrap();
     }
-    // #[ignore]
+    #[test]
+    fn add_todolist() {
+        // let todo_list = TodoList::new();
+        let result = TodoList::create().unwrap();
+        assert_eq!(result, 1);
+    }
+    #[ignore]
     #[test]
     fn make_first_todo_questionable() {
         TodoList::mark_as(1, TodoMarker::Questionable).unwrap();
