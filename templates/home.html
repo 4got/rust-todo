@@ -19,12 +19,15 @@
       <input type="hidden" name="update" />
       <input type="hidden" name="mark_as" />
       <input type="hidden" name="move_to" />
+      <input type="hidden" name="new" />
+      <input type="hidden" name="list_id" />
 
       <main class="page-main">
         <div class="row">
+          {% for todo_list in todo_lists %}
           <section class="card col-6">
             <div class="contains-gui">
-              <h1>Todos:</h1>
+              <h1>{{ todo_list.list.name }}</h1>
               <div class="df set">
                 <button
                   style="display: none"
@@ -182,13 +185,19 @@
               <input
                 type="text"
                 class="input f-1"
-                name="new"
                 placeholder="Write a wish"
-                onkeypress="onEnterNew()"
+                onkeypress="onEnterNew('{{ todo_list.list.id }}')"
                 form="todo_list"
               />
-              <ibutton />
             </div>
+          </section>
+
+          {% endfor %}
+
+          <section class="card col-6">
+            <button type="button" class="button-icon" onclick="createList()">
+              <i class="fas fa-plus"> </i> Add todo list
+            </button>
           </section>
         </div>
       </main>
@@ -262,18 +271,26 @@
         input("move_to").value = to;
         submitAction("move");
       };
-      const reload = window.location.reload;
+      const reload = () => window.location.reload();
       const save = () => {
         input("update").value = toUpdate
           .map((u) => `${u.index}##${u.content}`)
           .join("\n");
         submitAction("save");
       };
-      const onEnterNew = (e = window.event) => {
-        onEnter(() => submitAction("new"))();
+      const onEnterNew = (listId) => {
+        const e = window.event;
+        onEnter(() => {
+          input("list_id").value = listId;
+          input("new").value = e.target.value;
+          submitAction("new");
+        })();
       };
       const onEnterSave = (e = window.event) => {
         onEnter(save)();
+      };
+      const createList = () => {
+        submitAction("new_list");
       };
     </script>
   </body>

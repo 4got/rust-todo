@@ -38,9 +38,10 @@ pub struct Todo<T> {
     pub is_checked: bool,
     pub sort: usize,
     pub marker: TodoMarker,
+    pub list_id: usize,
 }
 impl Todo<String> {
-    pub fn new(content: String, is_checked: bool) -> Self {
+    pub fn new(content: String, is_checked: bool, list_id: usize) -> Self {
         let id = last_id();
         Self {
             id,
@@ -48,6 +49,7 @@ impl Todo<String> {
             is_checked,
             sort: TodoList::last_sort_value() + 1,
             marker: TodoMarker::Default,
+            list_id,
         }
     }
     pub fn is_questionable(&self) -> bool {
@@ -64,19 +66,21 @@ impl Todo<String> {
     }
 }
 
+#[allow(dead_code)]
 pub struct List {
-    id: usize,
-    name: String,
+    pub id: usize,
+    pub name: String,
 }
 pub struct TodoList<T> {
     pub todos: Vec<T>,
-    pub lists: Vec<List>,
+    pub list: List,
+    // pub lists: Vec<List>,
 }
 impl TodoList<Todo<String>> {
-    #[allow(dead_code)]
-    pub fn new(todos: Vec<Todo<String>>, lists: Vec<List>) -> Self {
-        Self { todos, lists }
-    }
+    // #[allow(dead_code)]
+    // pub fn new(todos: Vec<Todo<String>>) -> Self {
+    //     Self { todos }
+    // }
     #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.todos.len()
@@ -102,7 +106,6 @@ impl TodoList<Todo<String>> {
             true
         }
     }
-
     pub fn remove(&mut self, index: usize) -> () {
         println!("remove_number = {:?}", index);
         self.todos.remove(index);
@@ -151,65 +154,65 @@ impl TodoList<Todo<String>> {
         println!("restart: {}", RGB(166, 166, 166).paint("restart todo"));
         println!("exit: {}", RGB(166, 166, 166).paint("exit"));
     }
-    pub fn serve() -> std::io::Result<String> {
-        let mut todo_list = TodoList::from_db();
-        todo_list.print();
+    // pub fn serve() -> std::io::Result<String> {
+    //     let mut todo_list = TodoList::from_db();
+    //     todo_list.print();
 
-        // interface
-        TodoList::draw_interface();
+    //     // interface
+    //     TodoList::draw_interface();
 
-        // get command
-        let command: String = get_input()?;
-        match command.as_str() {
-            "clear" => {
-                TodoList::clear_db().unwrap();
-                println!("\r\nClear was successfull, closing\r\n");
-            }
-            "remove" => {
-                println!("Press number of todo: ");
-                let remove_number = get_input()?.parse::<usize>().unwrap();
+    //     // get command
+    //     let command: String = get_input()?;
+    //     match command.as_str() {
+    //         "clear" => {
+    //             TodoList::clear_db().unwrap();
+    //             println!("\r\nClear was successfull, closing\r\n");
+    //         }
+    //         "remove" => {
+    //             println!("Press number of todo: ");
+    //             let remove_number = get_input()?.parse::<usize>().unwrap();
 
-                if todo_list.has_item(remove_number - 1) {
-                    todo_list.remove(remove_number - 1);
-                    todo_list.print();
-                    todo_list.save_to_db().unwrap();
-                } else {
-                    println!("Wrong number = {:?}", remove_number);
-                }
-            }
-            "add" => {
-                println!("\r\nWant to add something?");
-                let todo: String = get_input()?;
-                TodoList::add_to_db(Todo::new(todo, false)).unwrap();
-            }
-            "complete" => {
-                println!("Press number of todo: ");
-                let check_number = get_input()?.parse::<usize>().unwrap();
-                if todo_list.has_item(check_number) {
-                    let ref todo = todo_list.todos[check_number - 1];
-                    TodoList::complete_in_db(todo.id).unwrap();
-                } else {
-                    println!("Wrong number = {:?}", check_number);
-                }
-            }
-            "restart" => {
-                println!("Press number of todo: ");
-                let uncheck_number = get_input()?.parse::<usize>().unwrap();
-                if todo_list.has_item(uncheck_number) {
-                    let ref todo = todo_list.todos[uncheck_number - 1];
-                    TodoList::uncomplete_in_db(todo.id).unwrap();
-                } else {
-                    println!("Wrong number = {:?}", uncheck_number);
-                }
-            }
-            "exit" => {
-                println!("Goodbye my love");
-                return Ok(String::from("Exit"));
-            }
-            _ => (),
-        }
-        Ok(String::from("Continue"))
-    }
+    //             if todo_list.has_item(remove_number - 1) {
+    //                 todo_list.remove(remove_number - 1);
+    //                 todo_list.print();
+    //                 todo_list.save_to_db().unwrap();
+    //             } else {
+    //                 println!("Wrong number = {:?}", remove_number);
+    //             }
+    //         }
+    //         "add" => {
+    //             println!("\r\nWant to add something?");
+    //             let todo: String = get_input()?;
+    //             TodoList::add_to_db(Todo::new(todo, false, 1)).unwrap();
+    //         }
+    //         "complete" => {
+    //             println!("Press number of todo: ");
+    //             let check_number = get_input()?.parse::<usize>().unwrap();
+    //             if todo_list.has_item(check_number) {
+    //                 let ref todo = todo_list.todos[check_number - 1];
+    //                 TodoList::complete_in_db(todo.id).unwrap();
+    //             } else {
+    //                 println!("Wrong number = {:?}", check_number);
+    //             }
+    //         }
+    //         "restart" => {
+    //             println!("Press number of todo: ");
+    //             let uncheck_number = get_input()?.parse::<usize>().unwrap();
+    //             if todo_list.has_item(uncheck_number) {
+    //                 let ref todo = todo_list.todos[uncheck_number - 1];
+    //                 TodoList::uncomplete_in_db(todo.id).unwrap();
+    //             } else {
+    //                 println!("Wrong number = {:?}", uncheck_number);
+    //             }
+    //         }
+    //         "exit" => {
+    //             println!("Goodbye my love");
+    //             return Ok(String::from("Exit"));
+    //         }
+    //         _ => (),
+    //     }
+    //     Ok(String::from("Continue"))
+    // }
 
     #[allow(dead_code)]
     pub fn print_from_file(file: &File) {
@@ -245,6 +248,7 @@ impl TodoList<Todo<String>> {
 
         Ok(conn)
     }
+    #[allow(dead_code)]
     pub fn create() -> Result<usize, rusqlite::Error> {
         let conn = TodoList::open_connection().unwrap();
         conn.execute(
@@ -252,25 +256,8 @@ impl TodoList<Todo<String>> {
             params![],
         )
     }
-    pub fn from_db() -> Self {
+    pub fn lists_from_db() -> Vec<List> {
         let conn = TodoList::open_connection().unwrap();
-        let mut stmt = conn
-            .prepare("SELECT id, content, is_checked, sort, marker from todos")
-            .unwrap();
-        let todos: Vec<Todo<String>> = stmt
-            .query_map([], |row| {
-                Ok(Todo {
-                    id: row.get(0)?,
-                    content: row.get(1)?,
-                    is_checked: <bool>::from(row.get(2).unwrap()),
-                    sort: row.get(3)?,
-                    marker: TodoMarker::from_usize(row.get(4).unwrap()),
-                })
-            })
-            .unwrap()
-            .into_iter()
-            .map(|t| t.unwrap())
-            .collect();
         let mut stmt = conn.prepare("SELECT id, name from todolists").unwrap();
         let lists: Vec<List> = stmt
             .query_map([], |row| {
@@ -283,8 +270,73 @@ impl TodoList<Todo<String>> {
             .into_iter()
             .map(|t| t.unwrap())
             .collect();
-        TodoList::new(todos, lists)
+        lists
     }
+    pub fn from_db_by_list(list: List) -> Self {
+        let conn = TodoList::open_connection().unwrap();
+        let mut stmt = conn
+            .prepare("SELECT id, content, is_checked, sort, marker, list_id from todos WHERE list_id = ?  ORDER BY sort ASC")
+            .unwrap();
+        let todos: Vec<Todo<String>> = stmt
+            .query_map(params![list.id], |row| {
+                Ok(Todo {
+                    id: row.get(0)?,
+                    content: row.get(1)?,
+                    is_checked: <bool>::from(row.get(2).unwrap()),
+                    sort: row.get(3)?,
+                    marker: TodoMarker::from_usize(row.get(4).unwrap()),
+                    list_id: row.get(5)?,
+                })
+            })
+            .unwrap()
+            .into_iter()
+            .map(|t| t.unwrap())
+            .collect();
+        Self { todos, list }
+    }
+    // pub fn from_db() -> Self {
+    //     let conn = TodoList::open_connection().unwrap();
+    //     let mut stmt = conn
+    //         .prepare("SELECT id, content, is_checked, sort, marker, list_id FROM todos ORDER BY sort ASC")
+    //         .unwrap();
+    //     let todos: Vec<Todo<String>> = stmt
+    //         .query_map([], |row| {
+    //             Ok(Todo {
+    //                 id: row.get(0)?,
+    //                 content: row.get(1)?,
+    //                 is_checked: <bool>::from(row.get(2).unwrap()),
+    //                 sort: row.get(3)?,
+    //                 marker: TodoMarker::from_usize(row.get(4).unwrap()),
+    //                 list_id: row.get(5)?,
+    //             })
+    //         })
+    //         .unwrap()
+    //         .into_iter()
+    //         .map(|t| t.unwrap())
+    //         .collect();
+    //     // let lists = TodoList::lists_from_db();
+    //     TodoList::new(todos)
+    // }
+    pub fn from_db_as_lists() -> Vec<TodoList<Todo<String>>> {
+        let mut todo_lists = vec![];
+        let lists = TodoList::lists_from_db();
+        for list in lists {
+            todo_lists.push(TodoList::from_db_by_list(list));
+        }
+        todo_lists
+    }
+    // pub fn as_lists(&mut self) -> Vec<TodoList<Todo<String>>> {
+    //     let mut lists: Vec<TodoList<Todo<String>>> = vec![];
+    //     for todo_list in &self.lists {
+    //         let todos = &self
+    //             .todos
+    //             .into_iter()
+    //             .filter(|t| t.list_id == todo_list.id)
+    //             .collect();
+    //         lists.push(TodoList::new(todos, vec![]));
+    //     }
+    //     lists
+    // }
     pub fn delete_in_db(id: usize) -> Result<usize, rusqlite::Error> {
         let conn = TodoList::open_connection().unwrap();
         conn.execute("DELETE from todos WHERE id = ?", params![id])
@@ -292,7 +344,7 @@ impl TodoList<Todo<String>> {
     pub fn add_to_db(todo: Todo<String>) -> Result<usize, rusqlite::Error> {
         let conn = TodoList::open_connection().unwrap();
         conn.execute(
-            "INSERT INTO todos (content, is_checked, sort) values (?1, ?2, ?3)",
+            "INSERT INTO todos (content, is_checked, sort, list_id) values (?1, ?2, ?3, ?4)",
             params![
                 todo.content.to_string(),
                 if todo.is_checked {
@@ -300,7 +352,8 @@ impl TodoList<Todo<String>> {
                 } else {
                     0.to_string()
                 },
-                todo.sort
+                todo.sort,
+                todo.list_id
             ],
         )
     }

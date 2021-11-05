@@ -10,6 +10,10 @@
   --warn: #e67e22;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: var(--text);
+  box-sizing: border-box;
+}
+* {
+  box-sizing: border-box;
 }
 :focus {
   outline: 2px solid var(--accent);
@@ -18,6 +22,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 1rem;
+}
+.card {
+  padding: 1rem;
 }
 .button-icon {
   padding: 0.2rem 0.5rem;
@@ -129,6 +137,7 @@
 }
 .row {
   display: flex;
+  flex-wrap: wrap;
   width: 100%;
   justify-content: center;
 }

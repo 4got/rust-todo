@@ -14,13 +14,12 @@ include!(concat!(env!("OUT_DIR"), "/generated.rs"));
 #[derive(Template)]
 #[template(path = "home.html")]
 struct HomeTemplate {
-    todo_list: TodoList<Todo<String>>,
+    todo_lists: Vec<TodoList<Todo<String>>>,
 }
 #[get("/")]
 async fn home() -> Result<HttpResponse> {
-    let mut todo_list = TodoList::from_db();
-    todo_list.todos.sort_by(|a, b| a.sort.cmp(&b.sort));
-    let s = HomeTemplate { todo_list }.render().unwrap();
+    let todo_lists = TodoList::from_db_as_lists();
+    let s = HomeTemplate { todo_lists }.render().unwrap();
 
     Ok(HttpResponse::Ok().content_type("text/html").body(s))
 }
@@ -33,6 +32,7 @@ struct Request {
     update: String,
     move_to: String,
     mark_as: String,
+    list_id: String,
 }
 
 #[post("/")]
@@ -90,9 +90,13 @@ async fn home_post(form: web::Form<Request>) -> Result<HttpResponse> {
         }
         "new" => {
             let content = form.new.to_string();
+            let list_id = form.list_id.parse::<usize>().unwrap();
             if content.len() > 0 {
-                TodoList::add_to_db(Todo::new(content, false)).unwrap();
+                TodoList::add_to_db(Todo::new(content, false, list_id)).unwrap();
             }
+        }
+        "new_list" => {
+            TodoList::create().unwrap();
         }
         _ => (),
     }
@@ -125,10 +129,11 @@ async fn main() -> std::io::Result<()> {
             .run()
             .await;
         }
-        "dev" => {
-            let todo_list = TodoList::from_db();
-            todo_list.print();
-        }
+        _ => ()
+        // "dev" => {
+        //     let todo_list = TodoList::from_db();
+        //     todo_list.print();
+        // }
         // "file" => loop {
         //     let file = TodoList::get_file();
         //     if let Ok(then) = TodoList::serve(Some(file)) {
@@ -137,13 +142,13 @@ async fn main() -> std::io::Result<()> {
         //         }
         //     }
         // },
-        _ => loop {
-            if let Ok(then) = TodoList::serve() {
-                if then.as_str() == "Exit" {
-                    break;
-                }
-            }
-        },
+        // _ => loop {
+        //     if let Ok(then) = TodoList::serve() {
+        //         if then.as_str() == "Exit" {
+        //             break;
+        //         }
+        //     }
+        // },
     }
 
     Ok(())
