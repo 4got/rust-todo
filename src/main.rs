@@ -1,11 +1,9 @@
 use ansi_term::Colour::RGB;
 use std::env;
-use std::fs;
+
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::{self, prelude::*, BufReader};
-use std::net::TcpListener;
-use std::net::TcpStream;
 
 mod tests;
 
@@ -247,7 +245,7 @@ impl TodoList<Todo<String>> {
     // }
 }
 
-use actix_web::{get, web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result};
+use actix_web::{get, web, App, HttpResponse, HttpServer, Result};
 use askama::Template;
 use std::collections::HashMap;
 
@@ -258,7 +256,7 @@ struct HomeTemplate {
 }
 
 #[get("/")]
-async fn home(query: web::Query<HashMap<String, String>>) -> Result<HttpResponse> {
+async fn home(_query: web::Query<HashMap<String, String>>) -> Result<HttpResponse> {
     let file = TodoList::get_file();
     let todo_list = TodoList::new(&file);
 
