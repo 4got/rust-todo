@@ -279,6 +279,7 @@
       const rewrite = (index) => {
         saveButton.style.display = "";
         reloadButton.style.display = "";
+        index = parseInt(index);
         const content = window.event.target.value;
         const found = toUpdate.find((t) => t.index === index);
         if (found) {
@@ -296,9 +297,12 @@
       };
       const reload = () => window.location.reload();
       const save = () => {
-        input("update").value = toUpdate
-          .map((u) => `${u.index}##${u.content}`)
-          .join("\n");
+        // input("update").value = toUpdate
+        //   .map((u) => `${u.index}##${u.content}`)
+        //   .join("\n");
+        input("update").value = JSON.stringify(toUpdate);
+        // .map((u) => JSON.stringify(u))
+        // .join("\n");
         submitAction("save");
       };
       const onEnterNew = (listId) => {

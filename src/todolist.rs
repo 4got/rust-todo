@@ -341,7 +341,6 @@ impl TodoList<Todo<String>> {
         stmt.execute(params![sort + to, id]).unwrap();
         stmt.execute(params![sort, dest_id])
     }
-    // pub fn row_field(conn: rusqlite::Connection) -> Result<Option<Row>> {}
     pub fn resort() {
         let conn = TodoList::open_connection().unwrap();
         let mut stmt = conn
