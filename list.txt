@@ -1,9 +1,10 @@
-Use struct static print method##false
-Add checked##true
-Remove complete bug##true
-Colorize##true
-Loop##true
-Add exit method##true
+Love Maria##true
 Cover with tests##false
-Render on server##true
-Add working form##false
+Add move methods##true
+Add front error handling##false
+Show save button oninput!##true
+Web components##false
+Database##false
+Archive##false
+Rework update form field##false
+Unique content error handle##false

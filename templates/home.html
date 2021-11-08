@@ -1,20 +1,297 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
-<body>
-  <ul>
-    {% for todo in todo_list.todos %}
-    <li>
-      {{- loop.index0 }}. {{ todo.content }}
-      {% if todo.is_checked %}✓{% endif %}
-    </li>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo</title>
 
-    {% endfor %}
-  </ul>
-</body>
+    <link href="/static/assets/common.css" rel="stylesheet" />
+    <link
+      href="https://well.ru/local/modules/hotel.search/fonts/fa/css/all.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <form action="" method="post" id="todo_list">
+      <input type="hidden" name="action" />
+      <input type="hidden" name="index" />
+      <input type="hidden" name="update" />
+      <input type="hidden" name="mark_as" />
+      <input type="hidden" name="move_to" />
+      <input type="hidden" name="new" />
+      <input type="hidden" name="list_id" />
+
+      <main class="page-main">
+        <div class="row">
+          {% for todo_list in todo_lists %}
+          <section class="card col-6">
+            <div class="contains-gui">
+              <h1>{{ todo_list.list.name }}</h1>
+              <div class="df set">
+                <button
+                  style="display: none"
+                  class="button-icon"
+                  onclick="reload()"
+                  type="button"
+                >
+                  <i class="fas fa-redo-alt"></i>
+                </button>
+                <button
+                  style="display: none"
+                  class="button-icon"
+                  onclick="save()"
+                  type="button"
+                >
+                  <i class="fas fa-save"></i>
+                </button>
+              </div>
+            </div>
+            <div class="list">
+              {% for todo in todo_list.todos %}
+              <!-- prettier-ignore-attribute -->
+              <div
+                class="list-item
+                {% if todo.is_checked %}is-checked{% endif %}
+                {% if todo.is_important() %}is-important{% endif %}"
+              >
+                <div class="contains-gui">
+                  <div class="list-marker">
+                    {% if todo.is_questionable() %}
+                    <button
+                      class="button-icon color-warn"
+                      type="button"
+                      onclick="useSelect('{{ todo.id }}')"
+                    >
+                      <i class="far fa-question-circle"></i>
+                    </button>
+                    {% else if todo.is_important() %}
+                    <button
+                      class="button-icon color-important"
+                      type="button"
+                      onclick="useSelect('{{ todo.id }}')"
+                    >
+                      <i class="far fa-exclamation-circle"></i>
+                    </button>
+                    {% else %}<button
+                      class="button-icon gui-hidden"
+                      type="button"
+                      onclick="useSelect('{{ todo.id }}')"
+                    >
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    {% endif %}
+
+                    <div
+                      data-select="{{ todo.id }}"
+                      style="display: none"
+                      class="select-absolute"
+                    >
+                      <button
+                        class="button-icon"
+                        onclick="closeSelect('{{ todo.id }}')"
+                        type="button"
+                      >
+                        <i class="fas fa-times"></i>
+                      </button>
+                      <button
+                        class="button-icon"
+                        onclick="markAs('{{ todo.id }}', 2)"
+                        type="button"
+                      >
+                        <i class="far fa-question-circle"></i>
+                      </button>
+                      <button
+                        class="button-icon"
+                        onclick="markAs('{{ todo.id }}', 1)"
+                        type="button"
+                      >
+                        <i class="far fa-exclamation-circle"></i>
+                      </button>
+                      <button
+                        class="button-icon"
+                        onclick="markAs('{{ todo.id }}', 0)"
+                        type="button"
+                      >
+                        <i class="far fa-circle"></i>
+                      </button>
+                    </div>
+                    <!-- {{ todo.id }} {{ todo.sort }} -->
+                  </div>
+                  <div class="df f-1 ml-1 ai-center">
+                    <div class="">
+                      {% if todo.is_checked %}
+                      <button
+                        class="button-icon"
+                        onclick="uncheck('{{ todo.id }}')"
+                        type="button"
+                      >
+                        <i class="fas fa-check-square"></i>
+                      </button>
+                      {% else %}
+                      <button
+                        class="button-icon"
+                        onclick="check('{{ todo.id }}')"
+                        type="button"
+                      >
+                        <i class="far fa-square"></i>
+                      </button>
+                      {% endif %}
+                    </div>
+                    <div class="df f-1 ml-1">
+                      <input
+                        class="f-1 input"
+                        value="{{ todo.content }}"
+                        oninput="rewrite('{{ todo.id }}')"
+                        onkeypress="onEnterSave()"
+                        form="todo_list"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="set gui-hidden ml-1">
+                    {% if !loop.first %}
+                    <button
+                      type="button"
+                      class="button-icon"
+                      onclick="move('{{ todo.id }}', '-1')"
+                    >
+                      <i class="fas fa-chevron-up"> </i>
+                    </button>
+                    {% endif %} {% if !loop.last %}
+                    <button
+                      type="button"
+                      class="button-icon"
+                      onclick="move('{{ todo.id }}', '1')"
+                    >
+                      <i class="fas fa-chevron-down"> </i>
+                    </button>
+                    {% endif %}
+                    <button
+                      type="button"
+                      class="button-icon"
+                      onclick="remove('{{ todo.id }}')"
+                    >
+                      <i class="fas fa-trash-alt"> </i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {% endfor %}
+            </div>
+
+            <div class="df ai-center mt-1">
+              <input
+                type="text"
+                class="input f-1"
+                placeholder="Write a wish"
+                onkeypress="onEnterNew('{{ todo_list.list.id }}')"
+                form="todo_list"
+              />
+            </div>
+          </section>
+
+          {% endfor %}
+
+          <section class="card col-6">
+            <button type="button" class="button-icon" onclick="createList()">
+              <i class="fas fa-plus"> </i> Add todo list
+            </button>
+          </section>
+        </div>
+      </main>
+    </form>
+    <script>
+      const onEnter =
+        (cb) =>
+        (e = window.event) => {
+          const keyCode = e.code || e.key;
+          if (keyCode == "Enter") {
+            return cb();
+          }
+        };
+      const toUpdate = [];
+      const saveButton = document.querySelector('[onclick="save()"]');
+      const reloadButton = document.querySelector('[onclick="reload()"]');
+      const input = (id) => document.querySelector(`[name="${id}"]`);
+      const submitAction = (action) => {
+        input("action").value = action;
+        input("action").form.submit();
+      };
+      const check = (index) => {
+        input("index").value = index;
+        submitAction("check");
+      };
+      const uncheck = (index) => {
+        input("index").value = index;
+        submitAction("uncheck");
+      };
+      const remove = (index) => {
+        input("index").value = index;
+        submitAction("remove");
+      };
+      const closeSelect = (index) => {
+        // const btn = window.event.target;
+        const select = document.querySelector(`[data-select="${index}"]`);
+        select.style.display = "none";
+      };
+      const useSelect = (index) => {
+        // const btn = window.event.target;
+        const select = document.querySelector(`[data-select="${index}"]`);
+        select.style.display = "";
+
+        const closeWhenNotSelect = () => {
+          if (select !== event.target && !select.contains(event.target)) {
+            closeSelect(index);
+            removeEventListener("click", closeWhenNotSelect);
+          }
+        };
+
+        // setTimeout(() => addEventListener("click", closeWhenNotSelect), 0);
+        addEventListener("click", closeWhenNotSelect);
+        window.event.stopPropagation();
+      };
+      const markAs = (index, mark) => {
+        input("mark_as").value = mark;
+        input("index").value = index;
+        submitAction("mark_as");
+      };
+      const rewrite = (index) => {
+        saveButton.style.display = "";
+        reloadButton.style.display = "";
+        const content = window.event.target.value;
+        const found = toUpdate.find((t) => t.index === index);
+        if (found) {
+          found.content = content;
+        } else toUpdate.push({ index, content });
+      };
+      const move = (from, to) => {
+        input("index").value = from;
+        input("move_to").value = to;
+        submitAction("move");
+      };
+      const reload = () => window.location.reload();
+      const save = () => {
+        input("update").value = toUpdate
+          .map((u) => `${u.index}##${u.content}`)
+          .join("\n");
+        submitAction("save");
+      };
+      const onEnterNew = (listId) => {
+        const e = window.event;
+        onEnter(() => {
+          input("list_id").value = listId;
+          input("new").value = e.target.value;
+          submitAction("new");
+        })();
+      };
+      const onEnterSave = (e = window.event) => {
+        onEnter(save)();
+      };
+      const createList = () => {
+        submitAction("new_list");
+      };
+    </script>
+  </body>
 </html>
