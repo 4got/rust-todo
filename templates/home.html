@@ -24,10 +24,35 @@
 
       <main class="page-main">
         <div class="row">
+          <section class="nav">
+            {% for todo_list in todo_lists %}
+            <div class="nav-item" data-slidelink>
+              {% for todo in todo_list.todos %} <span>{{todo.content}}</span> {%
+              endfor %}
+            </div>
+            {% endfor %}
+          </section>
+
+          <section class="">
+            <button
+              type="button"
+              class="button button-icon"
+              onclick="createList()"
+            >
+              <i class="fas fa-plus"> </i> Add todo list
+            </button>
+          </section>
+        </div>
+        <div class="row">
           {% for todo_list in todo_lists %}
-          <section class="card col-6">
+          <section class="card col-6" data-slide>
             <div class="contains-gui">
-              <h1>{{ todo_list.list.name }}</h1>
+              <input
+                class="h1-input input"
+                oninput="retitle('{{ todo_list.list.id }}')"
+                onkeypress="onEnterSave()"
+                value="{{ todo_list.list.name }}"
+              />
               <div class="df set">
                 <button
                   style="display: none"
@@ -193,12 +218,6 @@
           </section>
 
           {% endfor %}
-
-          <section class="card col-6">
-            <button type="button" class="button-icon" onclick="createList()">
-              <i class="fas fa-plus"> </i> Add todo list
-            </button>
-          </section>
         </div>
       </main>
     </form>
@@ -260,11 +279,16 @@
       const rewrite = (index) => {
         saveButton.style.display = "";
         reloadButton.style.display = "";
+        index = parseInt(index);
         const content = window.event.target.value;
         const found = toUpdate.find((t) => t.index === index);
         if (found) {
           found.content = content;
         } else toUpdate.push({ index, content });
+      };
+      const retitle = (index) => {
+        saveButton.style.display = "";
+        reloadButton.style.display = "";
       };
       const move = (from, to) => {
         input("index").value = from;
@@ -273,9 +297,12 @@
       };
       const reload = () => window.location.reload();
       const save = () => {
-        input("update").value = toUpdate
-          .map((u) => `${u.index}##${u.content}`)
-          .join("\n");
+        // input("update").value = toUpdate
+        //   .map((u) => `${u.index}##${u.content}`)
+        //   .join("\n");
+        input("update").value = JSON.stringify(toUpdate);
+        // .map((u) => JSON.stringify(u))
+        // .join("\n");
         submitAction("save");
       };
       const onEnterNew = (listId) => {
@@ -292,6 +319,23 @@
       const createList = () => {
         submitAction("new_list");
       };
+
+      const slider = () => {
+        const slides = [...document.querySelectorAll("[data-slide]")];
+        const slideLinks = [...document.querySelectorAll("[data-slidelink]")];
+        const showSlide = (i) => {
+          slides.forEach((slide) => (slide.style.display = "none"));
+          slides[i].style.display = "";
+
+          slideLinks.forEach((slide) => slide.classList.remove("active"));
+          slideLinks[i].classList.add("active");
+        };
+
+        slideLinks.forEach((link, i) => (link.onclick = () => showSlide(i)));
+        showSlide(0);
+        // debugger;
+      };
+      window.addEventListener("DOMContentLoaded", slider);
     </script>
   </body>
 </html>

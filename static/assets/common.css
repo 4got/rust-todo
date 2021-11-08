@@ -27,9 +27,18 @@
 .card {
   padding: 1rem;
 }
+.button {
+  font-size: 1.2rem;
+}
+.button.button-icon {
+  padding: 0.2rem 1rem;
+}
+.button.button-icon i {
+  margin-right: 0.8rem;
+  font-size: 1.2rem;
+}
 .button-icon {
   padding: 0.2rem 0.5rem;
-  font-size: 24px;
   border: none;
   color: var(--neutral);
   background-color: transparent;
@@ -41,6 +50,9 @@
   border-radius: 18px;
   cursor: pointer;
   transition: 0.1s;
+}
+.button-icon i {
+  font-size: 1.5rem;
 }
 
 /* form */
@@ -58,6 +70,16 @@
   display: inline-flex;
   border-radius: 18px;
 }
+.h1-input {
+  font-size: 1.6rem;
+  padding: 0.2rem;
+  border: none;
+  border-radius: 0;
+  outline: none;
+}
+.h1-input:focus {
+  border-bottom: 2px solid var(--accent);
+}
 .input:focus {
   background-color: var(--paper) !important;
 }
@@ -71,6 +93,27 @@
   border-radius: 18px;
 }
 
+/* nav */
+.nav {
+  display: flex;
+  flex: 1;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  height: 5rem;
+  font-size: 0.3rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin: 0.1rem;
+  flex: 0 0 5rem;
+  border-radius: 0.3rem;
+  cursor: pointer;
+  background-color: var(--bg);
+}
+.nav-item.active {
+  background-color: var(--paper);
+}
 /* list */
 .list {
   /* padding-left: 1.5rem; */

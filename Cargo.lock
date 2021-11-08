@@ -1486,6 +1486,7 @@ dependencies = [
  "global_counter",
  "rusqlite",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

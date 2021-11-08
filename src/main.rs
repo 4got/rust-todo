@@ -6,6 +6,7 @@ use actix_web_static_files;
 use ansi_term::Colour::RGB;
 use askama::Template;
 use serde::Deserialize;
+use serde_json;
 use std::env;
 use todolist::*;
 
@@ -33,6 +34,12 @@ struct Request {
     move_to: String,
     mark_as: String,
     list_id: String,
+}
+
+#[derive(Deserialize)]
+struct ToUpdate {
+    index: usize,
+    content: String,
 }
 
 #[post("/")]
@@ -65,18 +72,20 @@ async fn home_post(form: web::Form<Request>) -> Result<HttpResponse> {
         }
         "save" => {
             // todo_list.save_to_db().unwrap();
-            let to_update: Vec<(usize, String)> = form
-                .update
-                .to_string()
-                .split("\n")
-                .map(|l| {
-                    let l = l.to_string();
-                    let entries = l.split("##").collect::<Vec<&str>>();
-                    (entries[0].parse::<usize>().unwrap(), entries[1].to_string())
-                })
-                .collect();
-            for (index, content) in to_update {
-                TodoList::update_in_db(index, content).unwrap();
+            // let to_update: Vec<(usize, String)> = form
+            //     .update
+            //     .to_string()
+            //     .split("\n")
+            //     .map(|l| {
+            //         let l = l.to_string();
+            //         let entries = l.split("##").collect::<Vec<&str>>();
+            //         (entries[0].parse::<usize>().unwrap(), entries[1].to_string())
+            //     })
+            //     .collect();
+            let to_update: Vec<ToUpdate> = serde_json::from_str(&form.update)?;
+
+            for u in to_update {
+                TodoList::update_in_db(u.index, u.content).unwrap();
             }
         }
         "move" => {
