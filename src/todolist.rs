@@ -1,15 +1,15 @@
 use ansi_term::Colour::RGB;
 use std::fs::File;
-use std::io::{self, prelude::*, BufReader};
+use std::io::{prelude::*, BufReader};
 
 use global_counter::primitive::exact::CounterUsize;
 use rusqlite::{params, Connection, Result};
 
-pub fn get_input() -> std::io::Result<String> {
-    let mut input = String::new();
-    io::stdin().read_line(&mut input)?;
-    Ok(input.trim().to_string())
-}
+// pub fn get_input() -> std::io::Result<String> {
+//     let mut input = String::new();
+//     io::stdin().read_line(&mut input)?;
+//     Ok(input.trim().to_string())
+// }
 
 static LAST_ID: CounterUsize = CounterUsize::new(0);
 pub fn last_id() -> usize {
@@ -99,13 +99,16 @@ impl TodoList<Todo<String>> {
             .unwrap()
     }
 
-    pub fn has_item(&self, n: usize) -> bool {
-        if n == 0 || self.todos.len() < n {
-            false
-        } else {
-            true
-        }
-    }
+    // #[allow(dead_code)]
+    // pub fn has_item(&self, n: usize) -> bool {
+    //     if n == 0 || self.todos.len() < n {
+    //         false
+    //     } else {
+    //         true
+    //     }
+    // }
+
+    #[allow(dead_code)]
     pub fn remove(&mut self, index: usize) -> () {
         println!("remove_number = {:?}", index);
         self.todos.remove(index);
@@ -123,7 +126,7 @@ impl TodoList<Todo<String>> {
         self.todos.push(todo);
         Ok(())
     }
-
+    #[allow(dead_code)]
     pub fn print(&self) -> () {
         println!("\r\n{}\r\n", RGB(127, 255, 127).paint("Todo List"));
         for (i, todo) in self.todos.iter().enumerate() {
@@ -144,7 +147,7 @@ impl TodoList<Todo<String>> {
             };
         }
     }
-
+    #[allow(dead_code)]
     pub fn draw_interface() {
         println!("\r\n{}\r\n", RGB(127, 255, 127).paint("What do you want?"));
         println!("clear: {}", RGB(166, 166, 166).paint("remove all todos"));
@@ -246,6 +249,7 @@ impl TodoList<Todo<String>> {
         let conn = TodoList::open_connection().unwrap();
         conn.execute("DELETE from todos WHERE id = ?", params![id])
     }
+
     pub fn add_to_db(todo: Todo<String>) -> Result<usize, rusqlite::Error> {
         let conn = TodoList::open_connection().unwrap();
         conn.execute(
@@ -262,10 +266,14 @@ impl TodoList<Todo<String>> {
             ],
         )
     }
+
+    #[allow(dead_code)]
     pub fn clear_db() -> Result<usize, rusqlite::Error> {
         let conn = TodoList::open_connection()?;
         conn.execute("DELETE from todos", [])
     }
+
+    #[allow(dead_code)]
     pub fn save_to_db(self) -> Result<usize, rusqlite::Error> {
         TodoList::clear_db().unwrap();
         let mut result = 0;
