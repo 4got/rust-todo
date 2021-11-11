@@ -34,6 +34,7 @@ struct Request {
     move_to: String,
     mark_as: String,
     list_id: String,
+    update_lists: String,
 }
 
 #[derive(Deserialize)]
@@ -41,17 +42,22 @@ struct ToUpdate {
     index: usize,
     content: String,
 }
+#[derive(Deserialize)]
+struct ToUpdateLists {
+    index: usize,
+    name: String,
+}
+
+fn usize_field(field: &String) -> usize {
+    field.to_string().parse::<usize>().unwrap_or_else(|_| 0)
+}
 
 #[post("/")]
 async fn home_post(form: web::Form<Request>) -> Result<HttpResponse> {
     // let todo_list = TodoList::from_db();
 
     let mut action = form.action.to_string();
-    let index = if form.index.to_string().len() > 0 {
-        form.index.to_string().parse::<usize>().unwrap()
-    } else {
-        0
-    };
+    let index = usize_field(&form.index);
 
     if action.len() == 0 {
         action = if form.new.to_string().len() > 0 {
@@ -70,22 +76,20 @@ async fn home_post(form: web::Form<Request>) -> Result<HttpResponse> {
         "remove" => {
             TodoList::delete_in_db(index).unwrap();
         }
+        "remove_list" => {
+            let list_id = usize_field(&form.list_id);
+            List::delete(list_id).unwrap();
+        }
         "save" => {
-            // todo_list.save_to_db().unwrap();
-            // let to_update: Vec<(usize, String)> = form
-            //     .update
-            //     .to_string()
-            //     .split("\n")
-            //     .map(|l| {
-            //         let l = l.to_string();
-            //         let entries = l.split("##").collect::<Vec<&str>>();
-            //         (entries[0].parse::<usize>().unwrap(), entries[1].to_string())
-            //     })
-            //     .collect();
             let to_update: Vec<ToUpdate> = serde_json::from_str(&form.update)?;
 
             for u in to_update {
                 TodoList::update_in_db(u.index, u.content).unwrap();
+            }
+
+            let to_update_lists: Vec<ToUpdateLists> = serde_json::from_str(&form.update_lists)?;
+            for u in to_update_lists {
+                List::rename(u.index, u.name).unwrap();
             }
         }
         "move" => {

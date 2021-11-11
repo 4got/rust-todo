@@ -71,6 +71,19 @@ pub struct List {
     pub id: usize,
     pub name: String,
 }
+impl List {
+    pub fn rename(id: usize, name: String) -> Result<usize, rusqlite::Error> {
+        let conn = rusqlite::Connection::open("todos.db")?;
+        conn.execute(
+            "UPDATE todolists SET name = ?1 WHERE id = ?2",
+            params![name, id],
+        )
+    }
+    pub fn delete(id: usize) -> Result<usize, rusqlite::Error> {
+        let conn = rusqlite::Connection::open("todos.db")?;
+        conn.execute("DELETE FROM todolists WHERE id = ?1", params![id])
+    }
+}
 pub struct TodoList<T> {
     pub todos: Vec<T>,
     pub list: List,

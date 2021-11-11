@@ -4,11 +4,13 @@
   --selected: #ddec;
   --border: #ccfc;
   --neutral: #88a;
+  --shadow: #88a4;
   --text: #447;
   --accent: #22a;
   --important: #f1c40f;
+  --important-5: #f1c40f88;
   --warn: #e67e22;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: var(--text);
   box-sizing: border-box;
 }
@@ -66,9 +68,11 @@
   color: var(--text);
   background-color: transparent;
   font-family: inherit;
-  border: 1px solid var(--border);
+  border: none;
+  border-bottom: 2px solid var(--border);
   display: inline-flex;
-  border-radius: 18px;
+  border-radius: 0;
+  outline: none;
 }
 .h1-input {
   font-size: 1.6rem;
@@ -76,11 +80,13 @@
   border: none;
   border-radius: 0;
   outline: none;
+  border-bottom: 2px solid transparent;
 }
 .h1-input:focus {
   border-bottom: 2px solid var(--accent);
 }
 .input:focus {
+  border-bottom: 2px solid var(--accent);
   background-color: var(--paper) !important;
 }
 .select-absolute {
@@ -97,22 +103,41 @@
 .nav {
   display: flex;
   flex: 1;
+  user-select: none;
 }
 .nav-item {
   display: flex;
   flex-direction: column;
+  flex: 0 0 5rem;
+  cursor: pointer;
+}
+.nav-item:hover .nav-icon {
+  border-color: var(--accent);
+  background: var(--bg);
+  transition: 0.1s ease-out;
+}
+.nav-icon {
   height: 5rem;
-  font-size: 0.3rem;
-  overflow: hidden;
   border: 1px solid var(--border);
   margin: 0.1rem;
-  flex: 0 0 5rem;
   border-radius: 0.3rem;
-  cursor: pointer;
+  font-size: 0.3rem;
+  overflow: hidden;
   background-color: var(--bg);
 }
-.nav-item.active {
+.nav-item.active .nav-icon {
   background-color: var(--paper);
+  border-color: var(--neutral);
+}
+.nav-name {
+  font-size: 0.8rem;
+  text-align: center;
+  line-height: 1.2;
+  color: var(--neutral);
+}
+.nav-item.active .nav-name {
+  color: var(--text);
+  font-weight: 600;
 }
 /* list */
 .list {
@@ -125,13 +150,16 @@
 }
 .list-item:hover {
   background-color: var(--bg);
+  transition: 0.2s ease-out;
 }
 .list-item:hover .button-icon {
-  background-color: var(--bg);
+  /*   background-color: var(--selected); */
 }
 .list-item .button-icon:hover {
   background-color: var(--paper);
   color: var(--accent);
+  box-shadow: 0 4px 4px var(--shadow);
+  transition: 0.1s ease-out;
 }
 .list-item input {
   border: transparent;
@@ -169,7 +197,7 @@
 }
 .gui-hidden {
   display: flex;
-  opacity: 0;
+  opacity: 0.2;
   transition: 0.1s;
 }
 .ml-1 {
@@ -212,6 +240,9 @@
   margin-right: 0.4rem;
   margin-bottom: 0.4rem;
 }
+.text-center {
+  text-align: center;
+}
 
 /* colors */
 .color-important {
@@ -219,4 +250,10 @@
 }
 .color-warn {
   color: var(--warn);
+}
+.bg-important-5 {
+  background: var(--important-5);
+}
+.bg-border {
+  background: var(--border);
 }
